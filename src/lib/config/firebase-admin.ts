@@ -52,7 +52,7 @@ function initializeFirebaseAdmin() {
         else {
             try {
                 admin.initializeApp({
-                    projectId: process.env.FIREBASE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT,
+                    projectId: process.env.FIREBASE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || 'rumi-live',
                     credential: admin.credential.applicationDefault()
                 });
                 console.log('✅ Firebase Admin Initialized with ADC');
