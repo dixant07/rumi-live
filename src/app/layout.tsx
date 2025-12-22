@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Oreo",
+  title: "Rumi",
   description: "Connect, play, and chat with people worldwide",
   manifest: "/manifest.json",
 };

@@ -16,8 +16,14 @@ export async function POST(request: NextRequest) {
     try {
         const { uid, email, picture, name } = user;
 
-        const userRef = db.collection('users').doc(uid);
-        const userDoc = await userRef.get();
+        let userDoc;
+        try {
+            const userRef = db.collection('users').doc(uid);
+            userDoc = await userRef.get();
+        } catch (dbError: any) {
+            console.error("Firestore Error:", dbError);
+            throw new Error(`Firestore Failure: ${dbError.message}`);
+        }
 
         if (!userDoc.exists) {
             // Create new user

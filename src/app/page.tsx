@@ -38,10 +38,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-pink-600 flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 transition-all duration-300 group-hover:scale-105">
-              <span className="text-xl font-bold text-white">O</span>
+              <span className="text-xl font-bold text-white">R</span>
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
-              Oreo
+              Rumi
             </span>
           </Link>
 
@@ -119,7 +119,7 @@ export default function LandingPage() {
                 <div className="aspect-video bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center relative group cursor-pointer">
                   <img
                     src="https://placehold.co/1200x675/1a1a2e/ff6b6b?text=🎮+Video+Demo+Placeholder"
-                    alt="Oreo Demo Video"
+                    alt="Rumi Demo Video"
                     className="w-full h-full object-cover opacity-60"
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/30 transition-all duration-300">
@@ -157,7 +157,7 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
               <span className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-                Why Choose Oreo?
+                Why Choose Rumi?
               </span>
             </h2>
             <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
@@ -467,10 +467,10 @@ export default function LandingPage() {
             <div>
               <Link href="/" className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-pink-600 flex items-center justify-center">
-                  <span className="text-sm font-bold text-white">O</span>
+                  <span className="text-sm font-bold text-white">R</span>
                 </div>
                 <span className="text-xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
-                  Oreo
+                  Rumi
                 </span>
               </Link>
               <p className="text-zinc-500 text-sm">
@@ -511,7 +511,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-zinc-800/50">
             <p className="text-zinc-500 text-sm">
-              © 2024 Oreo. All rights reserved.
+              © 2024 Rumi. All rights reserved.
             </p>
             <div className="flex items-center gap-4 mt-4 md:mt-0">
               {/* Social Links - placeholder */}
