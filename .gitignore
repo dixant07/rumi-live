@@ -44,3 +44,7 @@ matchmaking/dist/
 # Keep templates
 !.env.template
 !.env.example
+
+# Test files
+test-firestore.js
+test-output.txt

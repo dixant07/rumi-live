@@ -70,13 +70,17 @@ function initializeFirebaseAdmin() {
 // Initialize on first import
 initializeFirebaseAdmin();
 
+import { getFirestore } from 'firebase-admin/firestore';
+
 const db = new Proxy({} as admin.firestore.Firestore, {
     get: (_target, prop) => {
         initializeFirebaseAdmin();
         if (!admin.apps.length) {
             throw new Error('Firebase Admin not initialized. Ensure FIREBASE_SERVICE_ACCOUNT_KEY is set.');
         }
-        return Reflect.get(admin.firestore(), prop);
+        // Explicitly use named database "default" (no parens)
+        // Standard admin.firestore() defaults to "(default)" which leads to 5 NOT_FOUND
+        return Reflect.get(getFirestore(admin.app(), 'default'), prop);
     }
 });
 
