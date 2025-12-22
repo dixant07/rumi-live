@@ -36,8 +36,7 @@ function initializeFirebaseAdmin() {
         if (credential) {
             try {
                 admin.initializeApp({
-                    credential: credential,
-                    projectId: process.env.FIREBASE_PROJECT_ID
+                    credential: credential
                 });
                 console.log('✅ Firebase Admin Initialized');
                 console.log('Project ID:', admin.app().options.projectId);
