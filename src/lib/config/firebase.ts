@@ -15,7 +15,7 @@ const firebaseConfig = {
 // Initialize Firebase (Client-side)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = getFirestore(app, 'default');
 const googleProvider = new GoogleAuthProvider();
 
 const storage = getStorage(app);
