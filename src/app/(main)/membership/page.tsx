@@ -7,42 +7,15 @@ import { useRouter } from 'next/navigation';
 import { useCashfree } from '@/lib/hooks/useCashfree';
 import { useUser } from '@/lib/contexts/AuthContext';
 
-const plans = [
-    {
-        id: 'FREE' as const,
-        name: 'Free',
-        price: '₹0',
-        period: '/month',
-        features: ['50 Matches/day', 'Standard Video Quality', 'Ad-supported'],
-        color: 'bg-gray-100',
-        textColor: 'text-gray-900',
-        icon: <Star className="w-6 h-6 text-gray-500" />,
-        buttonClass: 'bg-gray-100 hover:bg-gray-200 text-gray-900'
-    },
-    {
-        id: 'GOLD' as const,
-        name: 'Gold',
-        price: '₹199',
-        period: '/month',
-        features: ['200 Matches/day', 'HD Video Quality', 'No Ads', 'Gender Filter'],
-        color: 'bg-yellow-100',
-        textColor: 'text-yellow-800',
-        popular: true,
-        icon: <Zap className="w-6 h-6 text-yellow-600" />,
-        buttonClass: 'bg-orange-500 hover:bg-orange-600 text-white'
-    },
-    {
-        id: 'DIAMOND' as const,
-        name: 'Diamond',
-        price: '₹499',
-        period: '/month',
-        features: ['Unlimited Matches', '4K Video Quality', 'VIP Support', 'All Filters', 'Profile Badge'],
-        color: 'bg-blue-100',
-        textColor: 'text-blue-800',
-        icon: <Crown className="w-6 h-6 text-blue-600" />,
-        buttonClass: 'bg-blue-600 hover:bg-blue-700 text-white'
+import { PRICING_PLANS, TierId } from '@/lib/services/tiers';
+
+const getPlanIcon = (id: TierId) => {
+    switch (id) {
+        case 'FREE': return <Star className="w-6 h-6 text-gray-500" />;
+        case 'GOLD': return <Zap className="w-6 h-6 text-yellow-600" />;
+        case 'DIAMOND': return <Crown className="w-6 h-6 text-blue-600" />;
     }
-];
+};
 
 export default function MembershipPage() {
     const router = useRouter();
@@ -94,7 +67,7 @@ export default function MembershipPage() {
                 )}
 
                 <div className="grid md:grid-cols-3 gap-6">
-                    {plans.map((plan) => (
+                    {PRICING_PLANS.map((plan) => (
                         <div
                             key={plan.id}
                             className={`relative p-6 rounded-3xl bg-white shadow-xl flex flex-col transition-all duration-300 hover:shadow-2xl ${plan.popular ? 'ring-2 ring-orange-400 scale-[1.02]' : ''
@@ -107,12 +80,12 @@ export default function MembershipPage() {
                             )}
 
                             <div className={`w-12 h-12 rounded-2xl ${plan.color} flex items-center justify-center mb-5`}>
-                                {plan.icon}
+                                {getPlanIcon(plan.id)}
                             </div>
 
                             <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
                             <div className="flex items-baseline mb-5">
-                                <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
+                                <span className="text-3xl font-bold text-gray-900">{plan.displayPrice}</span>
                                 <span className="text-gray-500 ml-1 text-sm">{plan.period}</span>
                             </div>
 
@@ -136,7 +109,7 @@ export default function MembershipPage() {
                                     }
                                 }}
                             >
-                                {isLoading && plan.id !== 'FREE' && currentTier !== plan.id ? (
+                                {isLoading && plan.id !== 'FREE' && currentTier === plan.id ? (
                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                 ) : null}
                                 {getButtonText(plan.id)}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useNetwork } from '@/lib/contexts/NetworkContext';
-import { TIERS } from '@/lib/services/tiers';
+import { TIERS, TierId } from '@/lib/services/tiers';
 
 // Cashfree Backend URL - hosted separately
 const CASHFREE_BACKEND_URL = process.env.NEXT_PUBLIC_CASHFREE_BACKEND_URL ||
@@ -35,10 +35,12 @@ declare global {
     }
 }
 
+type PaidTierId = Exclude<TierId, 'FREE'>;
+
 interface UseCashfreeReturn {
     isLoading: boolean;
     isScriptLoaded: boolean;
-    initiatePayment: (planId: 'GOLD' | 'DIAMOND') => Promise<void>;
+    initiatePayment: (planId: PaidTierId) => Promise<void>;
     error: string | null;
 }
 
@@ -84,7 +86,7 @@ export function useCashfree(): UseCashfreeReturn {
         };
     }, []);
 
-    const initiatePayment = useCallback(async (planId: 'GOLD' | 'DIAMOND') => {
+    const initiatePayment = useCallback(async (planId: PaidTierId) => {
         if (!isScriptLoaded || !window.Cashfree) {
             setError('Payment gateway not ready. Please try again.');
             return;

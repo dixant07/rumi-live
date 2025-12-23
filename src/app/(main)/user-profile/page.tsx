@@ -11,7 +11,7 @@ import { useNetwork } from '@/lib/contexts/NetworkContext';
 import { toast } from 'sonner';
 import { storage } from '@/lib/config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { TIERS, getTier } from '@/lib/services/tiers';
+import { TIERS, getTier, TierId } from '@/lib/services/tiers';
 import homeData from '@/app/(main)/home/data.json';
 
 export default function UserProfilePage() {
@@ -198,7 +198,7 @@ export default function UserProfilePage() {
     };
 
     const getMembershipBadge = () => {
-        const tier = TIERS[formData.membershipTier];
+        const tier = TIERS[formData.membershipTier as TierId];
         const isPremium = formData.membershipTier === 'GOLD' || formData.membershipTier === 'DIAMOND';
 
         return (
