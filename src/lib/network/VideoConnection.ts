@@ -40,6 +40,7 @@ export class VideoConnection {
         this.iceServers = config.iceServers || [];
 
         console.log('[VideoConnection] Initializing WebRTC for video...');
+        console.log('[VideoConnection] ICE Servers:', JSON.stringify(this.iceServers, null, 2));
 
         const rtcConfig: RTCConfiguration = {
             iceServers: this.iceServers
