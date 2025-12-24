@@ -108,20 +108,20 @@ export default function HomePage() {
                         />
                         {/* Phone UI Overlay elements */}
                         <div className="absolute top-4 left-0 right-0 flex justify-between px-6 text-white/80 text-xs font-medium">
-                            <span>Orea</span>
-                            <div className="flex gap-1">
+                            <span>Rumi</span>
+                            {/* <div className="flex gap-1">
                                 <div className="w-3 h-3 rounded-full bg-green-400"></div>
                                 <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                            </div>
+                            </div> */}
                         </div>
 
                         <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-6">
                             <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center cursor-pointer hover:bg-white/30 transition-colors">
                                 <Video className="w-5 h-5 text-white" />
                             </div>
-                            <div className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform cursor-pointer">
+                            {/* <div className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform cursor-pointer">
                                 <div className="w-5 h-5 bg-white rounded-sm"></div>
-                            </div>
+                            </div> */}
                             <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center cursor-pointer hover:bg-white/30 transition-colors">
                                 <Gamepad2 className="w-5 h-5 text-white" />
                             </div>

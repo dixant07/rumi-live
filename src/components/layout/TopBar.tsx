@@ -251,8 +251,8 @@ export function TopBar({ mode, onModeChange, showToggle = true }: TopBarProps) {
             <header className="sticky top-0 z-50 hidden md:flex h-16 w-full items-center justify-between px-6 border-b border-gray-200 bg-white/80 backdrop-blur-md">
                 {/* Left: Logo */}
                 <Link href="/home">
-                    <div className="bg-orange-500 text-black font-bold text-lg px-5 py-1.5 rounded-full shadow-md hover:opacity-90 transition-opacity cursor-pointer">
-                        Rumi
+                    <div className="flex items-center">
+                        <img src="/logo.svg" alt="Rumi" className="h-10 w-auto" />
                     </div>
                 </Link>
 

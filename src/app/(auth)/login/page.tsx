@@ -90,7 +90,10 @@ export default function LoginPage() {
         <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
             <Card className="w-full max-w-md shadow-xl">
                 <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-center text-orange-600">Oreo</CardTitle>
+                    <div className="flex justify-center mb-4">
+                        <img src="/logo.svg" alt="Rumi" className="h-12 w-auto" />
+                    </div>
+                    <CardTitle className="text-2xl font-bold text-center text-orange-600">Welcome Back</CardTitle>
                     <CardDescription className="text-center">
                         Enter your email to sign in to your account
                     </CardDescription>

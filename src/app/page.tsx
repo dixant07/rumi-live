@@ -37,9 +37,11 @@ export default function LandingPage() {
         }`}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-pink-600 flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 transition-all duration-300 group-hover:scale-105">
-              <span className="text-xl font-bold text-white">R</span>
-            </div>
+            <img
+              src="/logo.svg"
+              alt="Rumi"
+              className="h-10 w-auto group-hover:scale-105 transition-transform duration-300"
+            />
             <span className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
               Rumi
             </span>
@@ -466,9 +468,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-8 mb-12">
             <div>
               <Link href="/" className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-pink-600 flex items-center justify-center">
-                  <span className="text-sm font-bold text-white">R</span>
-                </div>
+                <img src="/logo.svg" alt="Rumi" className="h-8 w-auto" />
                 <span className="text-xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
                   Rumi
                 </span>
