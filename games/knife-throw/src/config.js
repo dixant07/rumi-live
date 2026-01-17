@@ -42,7 +42,7 @@ export const CONFIG = {
     NETWORK: {
         // Recognize both 5173 (Vite default) and 3000 (alternative Vite) as local dev
         SERVER_URL: (window.location.port === '5173' || window.location.port === '3000')
-            ? 'http://localhost:5000'
+            ? 'http://localhost:8080'
             : window.location.origin,
         SOCKET_PATH: '/socket.io',  // Default Socket.IO path (server has its own domain)
         RECONNECT_DELAY: 3000,
