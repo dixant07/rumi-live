@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -16,8 +17,88 @@ import {
   Play,
   ChevronRight,
   Sparkles,
-  Heart
+  Heart,
+  ArrowRight,
+  ChevronLeft
 } from 'lucide-react';
+// import Video from 'next-video'; // We will use standard video tag for now to ensure compatibility with duplicated files in /videos if next-video component has issues
+import { ComponentProps } from 'react';
+
+function HeroVideoCarousel() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // In a real implementation using next-video, you would import these
+  // import video1 from '../../videos/rumi-2.mp4';
+  // and use them in the source.
+  // For now, next-video sync likely created assets in public/videos or similar, 
+  // but to be safe and immediate, we will use the raw paths or processed paths if known.
+  // Since we haven't seen the output of sync yet, let's assume we can reference the files we know exist.
+  // Actually, next-video usually requires importing the file to work with the Video component.
+  // Let's stick to standard video tags pointing to our duplicated files for the MVP carousel, 
+  // as next-video component usage requires the types to be perfectly generated and imported.
+
+  const videos = [
+    '/rumi-2.mp4',
+    // We don't have real other videos, using the duplicates I created. 
+    // Ideally these would be different files.
+    // '/videos/demo-1.mp4', // These are not in public, they are in root/videos. 
+    // To serve them to the browser, next-video must process them.
+    // If next-video sync worked, it might have put processed files in .next/static or similar, 
+    // but without using the import syntax, we can't easily access them.
+    // So for this step, I will use the one public video we have and simulate 'different' videos 
+    // or if I can move the demo files to public temporarily for the carousel verification.
+    '/rumi-2.mp4' // Using same video for demo purposes as requested by user to just have the structure
+  ];
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % videos.length);
+  };
+
+  const handlePrev = () => {
+    setCurrentIndex((prev) => (prev - 1 + videos.length) % videos.length);
+  };
+
+  return (
+    <div className="relative w-full h-full group">
+      <video
+        key={currentIndex} // Force re-render on change
+        src={videos[currentIndex]}
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="w-full h-full object-cover transition-opacity duration-500"
+        poster="/rumi-poster.jpg"
+      />
+
+      {/* Controls Overlay - Visible on Group Hover */}
+      <div className="absolute inset-0 flex items-center justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <button
+          onClick={(e) => { e.preventDefault(); handlePrev(); }}
+          className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/50 transition-colors border border-white/20"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <button
+          onClick={(e) => { e.preventDefault(); handleNext(); }}
+          className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/50 transition-colors border border-white/20"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* Indicators */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+        {videos.map((_, idx) => (
+          <div
+            key={idx}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-white w-6' : 'bg-white/50'}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -31,37 +112,51 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#FDFDFD] text-zinc-900 overflow-x-hidden selection:bg-orange-100 selection:text-orange-900">
+
+      {/* Ambient Background Mesh */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-100/40 rounded-full blur-[120px] mix-blend-multiply animate-blob"></div>
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-100/40 rounded-full blur-[120px] mix-blend-multiply animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-[-10%] left-[20%] w-[50%] h-[50%] bg-pink-100/40 rounded-full blur-[120px] mix-blend-multiply animate-blob animation-delay-4000"></div>
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02]"></div>
+      </div>
+
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-800/50' : 'bg-transparent'
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled
+        ? 'bg-white/70 backdrop-blur-xl border-b border-white/20 shadow-sm'
+        : 'bg-transparent'
         }`}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
-            <img
-              src="/logo.svg"
-              alt="Rumi"
-              className="h-10 w-auto group-hover:scale-105 transition-transform duration-300"
-            />
-            <span className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
+            <div className="relative h-9 w-9 group-hover:scale-105 transition-transform duration-300">
+              <Image
+                src="/logo.svg"
+                alt="Rumi"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-pink-600 bg-clip-text text-transparent">
               Rumi
             </span>
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-zinc-400 hover:text-white transition-colors duration-200">Features</a>
-            <a href="#how-it-works" className="text-zinc-400 hover:text-white transition-colors duration-200">How It Works</a>
-            <a href="#games" className="text-zinc-400 hover:text-white transition-colors duration-200">Games</a>
-            <a href="#testimonials" className="text-zinc-400 hover:text-white transition-colors duration-200">Testimonials</a>
+            <a href="#features" className="text-zinc-600 hover:text-zinc-900 font-medium transition-colors duration-200">Features</a>
+            <a href="#how-it-works" className="text-zinc-600 hover:text-zinc-900 font-medium transition-colors duration-200">How It Works</a>
+            <a href="#games" className="text-zinc-600 hover:text-zinc-900 font-medium transition-colors duration-200">Games</a>
           </div>
 
           <div className="flex items-center gap-3">
             <Link href="/login">
-              <Button variant="ghost" className="text-zinc-300 hover:text-white hover:bg-zinc-800/50">
+              <Button variant="ghost" className="text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/80 font-medium">
                 Log In
               </Button>
             </Link>
             <Link href="/signup">
-              <Button className="bg-gradient-to-r from-orange-500 to-pink-600 hover:from-orange-600 hover:to-pink-700 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300">
+              <Button className="bg-gradient-to-r from-orange-500 to-pink-600 hover:opacity-90 text-white shadow-lg shadow-orange-500/20 transition-all duration-300 rounded-full px-6">
                 Sign Up Free
               </Button>
             </Link>
@@ -70,83 +165,60 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-6">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-3xl"></div>
-        </div>
+      <section className="relative pt-32 pb-20 px-6 z-10">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-white/50 mb-8 backdrop-blur-md shadow-sm animate-fade-in-up">
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <span className="text-sm font-medium text-zinc-600">The most fun way to meet people</span>
+          </div>
 
-        <div className="max-w-7xl mx-auto relative">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-800/50 border border-zinc-700/50 mb-6 backdrop-blur-sm">
-              <Sparkles className="w-4 h-4 text-orange-400" />
-              <span className="text-sm text-zinc-300">Connect. Play. Make Friends.</span>
-            </div>
+          <h1 className="text-6xl md:text-8xl font-bold mb-8 leading-[1.1] tracking-tight">
+            <span className="block text-zinc-900">Start a conversation.</span>
+            <span className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 bg-clip-text text-transparent">
+              Play a game.
+            </span>
+          </h1>
 
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-                Video Chat & Play
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 bg-clip-text text-transparent">
-                With New Friends
-              </span>
-            </h1>
+          <p className="text-xl text-zinc-600 max-w-2xl mx-auto mb-12 leading-relaxed font-normal">
+            Meet amazing people from around the world. Video chat with high quality,
+            break the ice with fun mini-games, and make lasting connections.
+          </p>
 
-            <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-              Meet amazing people from around the world. Have fun playing mini-games together
-              while video chatting. Break the ice, make connections, create memories.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-              <Link href="/signup">
-                <Button size="lg" className="bg-gradient-to-r from-orange-500 to-pink-600 hover:from-orange-600 hover:to-pink-700 text-white text-lg px-8 py-6 shadow-2xl shadow-orange-500/30 hover:shadow-orange-500/50 transition-all duration-300 hover:scale-105">
-                  <Play className="w-5 h-5 mr-2" />
-                  Start Chatting Now
-                </Button>
-              </Link>
-              <Button size="lg" variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800/50 hover:text-white text-lg px-8 py-6 group">
-                Watch Demo
-                <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
+            <Link href="/signup">
+              <Button size="lg" className="h-14 bg-zinc-900 hover:bg-zinc-800 text-white text-lg px-8 rounded-full shadow-xl shadow-zinc-200 hover:shadow-2xl hover:scale-105 transition-all duration-300">
+                <Play className="w-5 h-5 mr-2 fill-current" />
+                Start Chatting Now
               </Button>
-            </div>
+            </Link>
+            <Button size="lg" variant="outline" className="h-14 bg-white/50 border-white/60 hover:bg-white text-zinc-700 text-lg px-8 rounded-full shadow-lg shadow-zinc-100 backdrop-blur-sm transition-all duration-300">
+              Watch Demo
+            </Button>
+          </div>
 
-            {/* Hero Video/GIF Placeholder */}
-            <div className="relative max-w-4xl mx-auto">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-pink-600 rounded-3xl blur-2xl opacity-30 -z-10"></div>
-              <div className="relative bg-zinc-900/90 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl">
-                {/* Placeholder for hero video/gif - Replace with actual video */}
-                <div className="aspect-video bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center relative group cursor-pointer">
-                  <img
-                    src="https://placehold.co/1200x675/1a1a2e/ff6b6b?text=🎮+Video+Demo+Placeholder"
-                    alt="Rumi Demo Video"
-                    className="w-full h-full object-cover opacity-60"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/30 transition-all duration-300">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-r from-orange-500 to-pink-600 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
-                      <Play className="w-8 h-8 text-white ml-1" />
-                    </div>
-                  </div>
-                </div>
+          {/* Hero Video/Visual */}
+          <div className="relative max-w-5xl mx-auto">
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-pink-600 rounded-[2rem] blur-3xl opacity-10 -z-10 transform scale-105"></div>
+            <div className="relative bg-white/40 border border-white/60 rounded-[2rem] p-3 backdrop-blur-xl shadow-2xl shadow-zinc-200/50">
+              <div className="aspect-video bg-black rounded-[1.5rem] overflow-hidden relative group border border-white/50">
+                <HeroVideoCarousel />
               </div>
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mt-20">
+          {/* Stats Bar */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto mt-24">
             {[
               { number: "1M+", label: "Active Users" },
-              { number: "50M+", label: "Connections Made" },
-              { number: "10+", label: "Fun Games" },
+              { number: "50M+", label: "Connections" },
+              { number: "4.9", label: "App Store Rating" },
               { number: "150+", label: "Countries" },
             ].map((stat, index) => (
-              <div key={index} className="text-center p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800/50 backdrop-blur-sm hover:border-orange-500/30 transition-all duration-300">
-                <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent mb-2">
+              <div key={index} className="text-center group p-4 rounded-2xl hover:bg-white/50 transition-colors duration-300">
+                <div className="text-4xl font-bold text-zinc-900 mb-2 group-hover:scale-110 transition-transform duration-300 inline-block font-mono tracking-tighter">
                   {stat.number}
                 </div>
-                <div className="text-zinc-400 text-sm">{stat.label}</div>
+                <div className="text-zinc-500 font-medium text-sm uppercase tracking-wider">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -154,16 +226,14 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 px-6 relative">
+      <section id="features" className="py-24 px-6 relative z-10">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              <span className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-                Why Choose Rumi?
-              </span>
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-zinc-900 tracking-tight">
+              Why people love Rumi
             </h2>
-            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-              Experience the perfect blend of video chatting and gaming entertainment
+            <p className="text-zinc-600 text-xl max-w-2xl mx-auto">
+              We've redesigned the video chat experience from the ground up to be more social, engaging, and fun.
             </p>
           </div>
 
@@ -171,48 +241,54 @@ export default function LandingPage() {
             {[
               {
                 icon: Video,
-                title: "HD Video Chat",
-                description: "Crystal clear video quality with low latency. Feel like you're in the same room with your new friends.",
-                gradient: "from-blue-500 to-cyan-500"
+                title: "Crystal Clear Video",
+                description: "Experience 1080p video quality with ultra-low latency. It feels like you're in the same room.",
+                color: "text-blue-500",
+                bg: "bg-blue-50"
               },
               {
                 icon: Gamepad2,
-                title: "Fun Mini-Games",
-                description: "Play exciting games like Knife Throw, Tic-Tac-Toe, and more while chatting. Break the ice naturally!",
-                gradient: "from-orange-500 to-pink-500"
+                title: "Social Gaming",
+                description: "Don't just talk—play! Challenge friends to Knife Throw, Tic-Tac-Toe, and more while you chat.",
+                color: "text-orange-500",
+                bg: "bg-orange-50"
               },
               {
                 icon: Users,
                 title: "Smart Matching",
-                description: "Our AI matches you with people who share your interests and gaming preferences.",
-                gradient: "from-purple-500 to-pink-500"
+                description: "Our AI uses interests and personality traits to find people you'll actually click with.",
+                color: "text-purple-500",
+                bg: "bg-purple-50"
               },
               {
                 icon: Shield,
                 title: "Safe & Secure",
-                description: "Advanced moderation and privacy controls keep your experience safe and enjoyable.",
-                gradient: "from-green-500 to-emerald-500"
+                description: "Advanced AI moderation and strict privacy controls keep your experience positive and safe.",
+                color: "text-emerald-500",
+                bg: "bg-emerald-50"
               },
               {
                 icon: MessageCircle,
-                title: "Real-Time Chat",
-                description: "Text chat alongside video if you prefer. Send emojis, GIFs, and reactions!",
-                gradient: "from-yellow-500 to-orange-500"
+                title: "Rich Chat",
+                description: "Express yourself with reactions, GIFs, and stickers when words aren't enough.",
+                color: "text-pink-500",
+                bg: "bg-pink-50"
               },
               {
                 icon: Globe,
-                title: "Global Community",
-                description: "Connect with people from 150+ countries. Automatic translation coming soon!",
-                gradient: "from-pink-500 to-rose-500"
+                title: "Global Reach",
+                description: "Connect instantly with people from over 150 countries. The world is at your fingertips.",
+                color: "text-indigo-500",
+                bg: "bg-indigo-50"
               }
             ].map((feature, index) => (
-              <Card key={index} className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm hover:border-zinc-700 transition-all duration-300 group hover:-translate-y-1">
-                <CardContent className="p-6">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    <feature.icon className="w-6 h-6 text-white" />
+              <Card key={index} className="border-0 bg-white/60 backdrop-blur-xl shadow-lg shadow-zinc-200/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-3xl overflow-hidden group">
+                <CardContent className="p-8 h-full flex flex-col items-start">
+                  <div className={`w-14 h-14 rounded-2xl ${feature.bg} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                    <feature.icon className={`w-7 h-7 ${feature.color}`} />
                   </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
-                  <p className="text-zinc-400 leading-relaxed">{feature.description}</p>
+                  <h3 className="text-xl font-bold text-zinc-900 mb-3">{feature.title}</h3>
+                  <p className="text-zinc-600 leading-relaxed">{feature.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -220,56 +296,44 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section id="how-it-works" className="py-24 px-6 bg-zinc-900/50">
+      {/* How It Works */}
+      <section id="how-it-works" className="py-24 px-6 relative z-10 bg-white/40 backdrop-blur-sm border-y border-white/60">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              <span className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-                How It Works
-              </span>
-            </h2>
-            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-              Get started in just 3 simple steps
-            </p>
+          <div className="text-center mb-20">
+            <h2 className="text-4xl font-bold mb-4 text-zinc-900">It's incredibly simple</h2>
+            <p className="text-zinc-600">Start making friends in under 60 seconds</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-12 relative">
+            {/* Connecting Line (Desktop) */}
+            <div className="hidden md:block absolute top-[100px] left-[16%] right-[16%] h-[2px] bg-gradient-to-r from-transparent via-zinc-200 to-transparent"></div>
+
             {[
               {
                 step: "01",
-                title: "Create Account",
-                description: "Sign up in seconds with your email or Google account. Complete your profile to get better matches.",
-                image: "https://placehold.co/400x300/1a1a2e/ff6b6b?text=📝+Sign+Up"
+                title: "Sign Up",
+                desc: "Create your profile in seconds.",
+                emoji: "👋"
               },
               {
                 step: "02",
-                title: "Find a Match",
-                description: "Choose to video chat, play games, or both! Our smart matching finds the perfect person for you.",
-                image: "https://placehold.co/400x300/1a1a2e/ff6b6b?text=🎯+Match"
+                title: "Get Matched",
+                desc: "We find people you'll like.",
+                emoji: "🤝"
               },
               {
                 step: "03",
-                title: "Chat & Play",
-                description: "Start your video call and choose a fun mini-game to play together. Make friends, have fun!",
-                image: "https://placehold.co/400x300/1a1a2e/ff6b6b?text=🎮+Play"
+                title: "Have Fun",
+                desc: "Chat, play, and connect.",
+                emoji: "🎉"
               }
-            ].map((step, index) => (
-              <div key={index} className="relative group">
-                <div className="absolute -top-6 -left-2 text-8xl font-bold text-zinc-800/50 group-hover:text-orange-500/20 transition-colors duration-300">
-                  {step.step}
+            ].map((item, i) => (
+              <div key={i} className="relative flex flex-col items-center text-center group">
+                <div className="w-20 h-20 rounded-2xl bg-white shadow-lg shadow-zinc-100 flex items-center justify-center text-3xl mb-8 relative z-10 border border-zinc-100 group-hover:scale-110 transition-transform duration-300">
+                  {item.emoji}
                 </div>
-                <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all duration-300">
-                  <img
-                    src={step.image}
-                    alt={step.title}
-                    className="w-full aspect-[4/3] object-cover"
-                  />
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold text-white mb-2">{step.title}</h3>
-                    <p className="text-zinc-400">{step.description}</p>
-                  </div>
-                </div>
+                <h3 className="text-xl font-bold text-zinc-900 mb-2">{item.title}</h3>
+                <p className="text-zinc-500 max-w-[200px]">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -277,260 +341,185 @@ export default function LandingPage() {
       </section>
 
       {/* Games Section */}
-      <section id="games" className="py-24 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              <span className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-                Fun Games to Play
-              </span>
-            </h2>
-            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-              Break the ice with our collection of exciting mini-games
+      <section id="games" className="py-24 px-0 z-10 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 mb-12">
+          <div className="text-center">
+            <h2 className="text-4xl font-bold mb-4 text-zinc-900 tracking-tight">Break the ice with games</h2>
+            <p className="text-zinc-600 text-lg max-w-xl mx-auto">
+              Awkward silences are a thing of the past. Jump into a game and let the fun begin.
             </p>
           </div>
+        </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="relative w-full overflow-hidden pb-12 group/slider">
+          <div className="flex gap-6 animate-marquee hover:[animation-play-state:paused] w-max px-6">
             {[
               {
                 name: "Knife Throw",
-                description: "Test your aim in this exciting target practice game!",
-                image: "https://placehold.co/300x400/1a1a2e/ff6b6b?text=🔪+Knife+Throw",
-                badge: "Popular"
+                desc: "Test your aim",
+                img: "/knife-throw.png",
+                color: "bg-orange-500"
               },
               {
                 name: "Tic-Tac-Toe",
-                description: "Classic game with a modern twist!",
-                image: "https://placehold.co/300x400/1a1a2e/ff6b6b?text=⭕+Tic+Tac+Toe",
-                badge: "Classic"
+                desc: "Classic strategy",
+                img: "/tic-tac-toe.png",
+                color: "bg-pink-500"
               },
               {
                 name: "Connect Four",
-                description: "Strategy meets fun in this colorful challenge!",
-                image: "https://placehold.co/300x400/1a1a2e/ff6b6b?text=🔴+Connect+4",
-                badge: "New"
+                desc: "Connect and win",
+                img: "/connect-four.png",
+                color: "bg-purple-500"
               },
               {
-                name: "Chess",
-                description: "The ultimate game of minds!",
-                image: "https://placehold.co/300x400/1a1a2e/ff6b6b?text=♟️+Chess",
-                badge: "Coming Soon"
+                name: "Ping Pong",
+                desc: "Fast paced action",
+                img: "/ping-pong.png",
+                color: "bg-blue-500"
+              },
+              {
+                name: "Bowling",
+                desc: "Strike it big",
+                img: "/bowling.png",
+                color: "bg-emerald-500"
+              },
+              {
+                name: "Darts",
+                desc: "Hit the bullseye",
+                img: "/darts.png",
+                color: "bg-red-500"
+              },
+              {
+                name: "Doodle Guess",
+                desc: "Draw and guess",
+                img: "/doodle-guess.png",
+                color: "bg-yellow-500"
+              },
+              {
+                name: "Dumb Charades",
+                desc: "Act it out",
+                img: "/dumb-charades.png",
+                color: "bg-cyan-500"
+              },
+              {
+                name: "Many More...",
+                desc: "Coming soon",
+                isMore: true,
+                color: "bg-zinc-800"
               }
-            ].map((game, index) => (
-              <div key={index} className="group relative">
-                <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all duration-300 hover:-translate-y-2">
-                  <div className="absolute top-4 right-4 z-10">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${game.badge === 'Popular' ? 'bg-orange-500 text-white' :
-                      game.badge === 'New' ? 'bg-green-500 text-white' :
-                        game.badge === 'Classic' ? 'bg-blue-500 text-white' :
-                          'bg-zinc-700 text-zinc-300'
-                      }`}>
-                      {game.badge}
-                    </span>
-                  </div>
-                  <img
-                    src={game.image}
-                    alt={game.name}
-                    className="w-full aspect-[3/4] object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <h3 className="text-xl font-semibold text-white mb-1">{game.name}</h3>
-                    <p className="text-zinc-400 text-sm">{game.description}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Link href="/games">
-              <Button size="lg" variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800/50 hover:text-white group">
-                View All Games
-                <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-24 px-6 bg-zinc-900/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              <span className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-                What People Say
-              </span>
-            </h2>
-            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-              Join thousands of happy users making connections daily
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                name: "Sarah M.",
-                location: "New York, USA",
-                avatar: "https://placehold.co/60x60/ff6b6b/white?text=SM",
-                text: "I was skeptical at first, but Oreo made meeting new people so much fun! The games really help break the ice. Met some amazing friends here! 💖",
-                rating: 5
-              },
-              {
-                name: "Alex K.",
-                location: "London, UK",
-                avatar: "https://placehold.co/60x60/4ecdc4/white?text=AK",
-                text: "The video quality is incredible and the mini-games are addictive! It's like Omegle but actually good. No weird stuff, just genuine connections.",
-                rating: 5
-              },
-              {
-                name: "Priya S.",
-                location: "Mumbai, India",
-                avatar: "https://placehold.co/60x60/ffe66d/333?text=PS",
-                text: "Finally a platform where I can chat AND play games simultaneously! The matching is smart and I've made friends from 10+ different countries.",
-                rating: 5
-              }
-            ].map((testimonial, index) => (
-              <Card key={index} className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm hover:border-zinc-700 transition-all duration-300">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-1 mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                    ))}
-                  </div>
-                  <p className="text-zinc-300 mb-6 leading-relaxed">"{testimonial.text}"</p>
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={testimonial.avatar}
-                      alt={testimonial.name}
-                      className="w-12 h-12 rounded-full"
-                    />
-                    <div>
-                      <div className="font-semibold text-white">{testimonial.name}</div>
-                      <div className="text-zinc-500 text-sm">{testimonial.location}</div>
+            ].map((game, i) => (
+              <div key={i} className="relative w-72 h-96 flex-shrink-0 rounded-[2rem] overflow-hidden group cursor-pointer shadow-xl shadow-zinc-200/50 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
+                {game.isMore ? (
+                  <div className="absolute inset-0 bg-zinc-100 flex flex-col items-center justify-center p-8 text-center border-2 border-dashed border-zinc-300">
+                    <div className="w-20 h-20 rounded-full bg-zinc-200 flex items-center justify-center mb-6">
+                      <Gamepad2 className="w-10 h-10 text-zinc-400" />
                     </div>
+                    <h3 className="text-2xl font-bold text-zinc-900 mb-2">And Many More</h3>
+                    <p className="text-zinc-500">We are constantly adding new games!</p>
                   </div>
-                </CardContent>
-              </Card>
+                ) : (
+                  <>
+                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 ${game.color}`}></div>
+                    <div className="h-2/3 p-8 flex items-center justify-center bg-zinc-50 group-hover:scale-105 transition-transform duration-500 relative">
+                      <Image
+                        src={game.img!}
+                        alt={game.name}
+                        fill
+                        className="object-contain drop-shadow-xl p-2"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-white p-6 border-t border-zinc-100 flex flex-col justify-center">
+                      <h3 className="text-xl font-bold text-zinc-900 mb-1">{game.name}</h3>
+                      <p className="text-zinc-500 text-sm font-medium">{game.desc}</p>
+                    </div>
+                  </>
+                )}
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 via-pink-500/20 to-purple-500/20"></div>
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/30 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-500/30 rounded-full blur-3xl"></div>
-        </div>
+      <section className="py-24 px-6 z-10 relative">
+        <div className="max-w-5xl mx-auto relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-pink-500 rounded-[3rem] opacity-10 blur-2xl transform -rotate-1"></div>
 
-        <div className="max-w-4xl mx-auto text-center relative">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-800/50 border border-zinc-700/50 mb-6 backdrop-blur-sm">
-            <Heart className="w-4 h-4 text-pink-500" />
-            <span className="text-sm text-zinc-300">Join 1M+ Happy Users</span>
-          </div>
+          <div className="relative bg-white/80 backdrop-blur-2xl rounded-[2.5rem] border border-white/50 shadow-2xl shadow-orange-500/10 overflow-hidden px-8 py-20 text-center">
 
-          <h2 className="text-4xl md:text-6xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-              Ready to Make
-            </span>
-            <br />
-            <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 bg-clip-text text-transparent">
-              New Friends?
-            </span>
-          </h2>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-pink-200/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
 
-          <p className="text-zinc-400 text-lg mb-10 max-w-2xl mx-auto">
-            Join the most fun way to connect with people worldwide.
-            It's free, it's safe, and it's waiting for you.
-          </p>
+            <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight text-zinc-900 relative z-10">
+              Ready to meet your<br />
+              <span className="bg-gradient-to-r from-orange-500 to-pink-600 bg-clip-text text-transparent">new best friend?</span>
+            </h2>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/signup">
-              <Button size="lg" className="bg-gradient-to-r from-orange-500 to-pink-600 hover:from-orange-600 hover:to-pink-700 text-white text-lg px-10 py-6 shadow-2xl shadow-orange-500/30 hover:shadow-orange-500/50 transition-all duration-300 hover:scale-105">
-                <Zap className="w-5 h-5 mr-2" />
-                Get Started Free
+            <p className="text-xl text-zinc-600 mb-10 max-w-xl mx-auto relative z-10">
+              Join over 1 million users today. No credit card required.
+            </p>
+
+            <Link href="/signup" className="relative z-10 inline-block">
+              <Button size="lg" className="h-16 px-12 bg-black hover:bg-zinc-800 text-white rounded-full text-xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                Get Started for Free
               </Button>
             </Link>
           </div>
-
-          <p className="text-zinc-500 text-sm mt-6">
-            No credit card required • Takes less than 30 seconds
-          </p>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-6 border-t border-zinc-800/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-12">
-            <div>
-              <Link href="/" className="flex items-center gap-2 mb-4">
-                <img src="/logo.svg" alt="Rumi" className="h-8 w-auto" />
-                <span className="text-xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
-                  Rumi
-                </span>
-              </Link>
-              <p className="text-zinc-500 text-sm">
-                The most fun way to meet new people and make friends through video chat and games.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-white mb-4">Product</h4>
-              <ul className="space-y-2 text-zinc-400 text-sm">
-                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#games" className="hover:text-white transition-colors">Games</a></li>
-                <li><Link href="/membership" className="hover:text-white transition-colors">Pricing</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Mobile App</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-white mb-4">Company</h4>
-              <ul className="space-y-2 text-zinc-400 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-                <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-white mb-4">Legal</h4>
-              <ul className="space-y-2 text-zinc-400 text-sm">
-                <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link></li>
-                <li><Link href="/refund-policy" className="hover:text-white transition-colors">Refund & Cancellation</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Community Guidelines</a></li>
-              </ul>
-            </div>
+      {/* Simplified Footer */}
+      <footer className="py-12 px-6 border-t border-zinc-200/60 bg-white/40 backdrop-blur-sm z-10 relative">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-xl text-zinc-900">Rumi</span>
+            <span className="text-zinc-400 text-sm">© 2024</span>
           </div>
 
-          <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-zinc-800/50">
-            <p className="text-zinc-500 text-sm">
-              © 2024 Rumi. All rights reserved.
-            </p>
-            <div className="flex items-center gap-4 mt-4 md:mt-0">
-              {/* Social Links - placeholder */}
-              <a href="#" className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-colors">
-                <span className="text-zinc-400">𝕏</span>
+          <div className="flex items-center gap-8 text-sm font-medium text-zinc-600">
+            <a href="#" className="hover:text-zinc-900">Privacy</a>
+            <a href="#" className="hover:text-zinc-900">Terms</a>
+            <a href="#" className="hover:text-zinc-900">Contact</a>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {['twitter', 'instagram', 'youtube'].map((social) => (
+              <a key={social} href="#" className="w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center transition-colors">
+                <span className="sr-only">{social}</span>
+                <div className="w-4 h-4 bg-zinc-400 rounded-sm"></div>
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-colors">
-                <span className="text-zinc-400">in</span>
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-colors">
-                <span className="text-zinc-400">▶</span>
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-colors">
-                <span className="text-zinc-400">📸</span>
-              </a>
-            </div>
+            ))}
           </div>
         </div>
       </footer>
+
+      <style jsx global>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          50% { transform: translateX(calc(-100% + 100vw)); }
+          100% { transform: translateX(0); }
+        }
+        .animate-marquee {
+          animation: marquee 60s linear infinite;
+        }
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+      `}</style>
     </div>
   );
 }

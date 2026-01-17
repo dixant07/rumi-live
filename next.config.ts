@@ -9,6 +9,8 @@ const withPWA = withPWAInit({
   },
 });
 
+import { withNextVideo } from 'next-video/process';
+
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
@@ -43,7 +45,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextVideo(nextConfig);
 // export default withPWA(nextConfig);
 
 
