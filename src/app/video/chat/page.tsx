@@ -33,7 +33,6 @@ export default function VideoChatPage() {
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const isSwitchingMode = useRef(false);
 
     const [status, setStatus] = useState("Waiting for connection...");
     const [inputText, setInputText] = useState("");
@@ -142,10 +141,6 @@ export default function VideoChatPage() {
         initConnection();
 
         return () => {
-            // Disconnect/Leave queue on unmount (navigation)
-            if (networkManager) {
-                networkManager.disconnect();
-            }
             unsubs.forEach(unsub => unsub());
         };
     }, [networkManager]);
@@ -203,7 +198,6 @@ export default function VideoChatPage() {
     const handleModeToggle = (newMode: 'game' | 'video') => {
         setMode(newMode);
         if (newMode === 'game') {
-            isSwitchingMode.current = true;
             router.push('/video/game');
         }
     };
