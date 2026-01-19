@@ -14,7 +14,8 @@ import {
     Flag,
     Crown,
     Gamepad2,
-    X
+    X,
+    Bot
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { TopBar } from '@/components/layout/TopBar';
@@ -52,6 +53,14 @@ export default function VideoChatPage() {
         type: 'info'
     });
 
+    // Bot state
+    const [isConnectedToBot, setIsConnectedToBot] = useState(false);
+    const [botPersona, setBotPersona] = useState<{
+        id: string;
+        name: string;
+        avatar: string;
+    } | null>(null);
+
     const { opponent } = useCurrentOpponent();
 
     useEffect(() => {
@@ -72,9 +81,21 @@ export default function VideoChatPage() {
             setStatus("Connected");
         };
 
-        const handleMatchFound = () => {
-            setStatus("Match Found!");
-            // clearMessages handled in context, or here if strict per-match view clearing is needed
+        const handleMatchFound = (data: unknown) => {
+            const matchData = data as { isBot?: boolean; botPersona?: { id: string; name: string; avatar: string } };
+            console.log('[VideoChatPage] match_found:', matchData);
+
+            if (matchData?.isBot && matchData?.botPersona) {
+                setStatus("Connected");
+                setIsConnectedToBot(true);
+                setBotPersona(matchData.botPersona);
+                // Clear video since bot has no video stream
+                if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+            } else {
+                setStatus("Match Found!");
+                setIsConnectedToBot(false);
+                setBotPersona(null);
+            }
             // context handles it on match_found event.
         };
 
@@ -119,9 +140,18 @@ export default function VideoChatPage() {
             // Hydrate if already in a match (e.g. from Internal Navigation)
             if (networkManager.roomId && networkManager.opponentId) {
                 console.log("Already in match, resuming chat session...");
-                setStatus("Match Found!");
-                if (networkManager.videoConnection?.remoteStream) {
-                    setStatus("Connected");
+
+                // Hydrate bot state from NetworkManager
+                if (networkManager.isConnectedToBot && networkManager.botPersona) {
+                    console.log('[VideoChatPage] Hydrating bot state:', networkManager.botPersona);
+                    setIsConnectedToBot(true);
+                    setBotPersona(networkManager.botPersona);
+                    setStatus(`Connected to ${networkManager.botPersona.name}!`);
+                } else {
+                    setStatus("Match Found!");
+                    if (networkManager.videoConnection?.remoteStream) {
+                        setStatus("Connected");
+                    }
                 }
                 return;
             }
@@ -226,12 +256,22 @@ export default function VideoChatPage() {
 
                 {/* Middle: Remote Video (Fullscreen on Mobile) */}
                 <Card className="flex-1 rounded-none md:rounded-[1rem] overflow-hidden bg-[#EAE8D9] relative border-0 shadow-none group p-0 absolute inset-0 md:relative md:inset-auto z-0">
-                    <video
-                        ref={remoteVideoRef}
-                        autoPlay
-                        playsInline
-                        className="w-full h-full object-cover"
-                    />
+                    {isConnectedToBot && botPersona ? (
+                        // Bot Avatar Display - Full screen image
+                        <img
+                            src={botPersona.avatar}
+                            alt={botPersona.name}
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        // Remote Video
+                        <video
+                            ref={remoteVideoRef}
+                            autoPlay
+                            playsInline
+                            className="w-full h-full object-cover"
+                        />
+                    )}
 
                     {/* Incoming Invite Overlay */}
                     {incomingInvite && (
@@ -273,7 +313,7 @@ export default function VideoChatPage() {
 
                     {/* User Info Overlay (Opponent Name) */}
                     <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-left z-10 w-fit">
-                        <p className="font-bold text-sm leading-none">{opponent?.displayName || opponent?.name || "Opponent"}</p>
+                        <p className="font-bold text-sm leading-none">{isConnectedToBot ? botPersona?.name : (opponent?.displayName || opponent?.name || "Opponent")}</p>
                         <p className="opacity-80 text-[10px] leading-none mt-0.5">{status === "Connected" ? "Online" : status}</p>
                     </div>
 
@@ -340,12 +380,7 @@ export default function VideoChatPage() {
                         </Button>
                     </div>
 
-                    {/* Placeholder if no video */}
-                    {!remoteVideoRef.current?.srcObject && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="text-gray-400 font-medium">{status}</div>
-                        </div>
-                    )}
+
 
                     {/* Mobile Floating Chat Overlay */}
                     <div className="absolute bottom-20 left-4 right-4 flex flex-col justify-end pointer-events-none gap-2 z-30 min-h-[120px] md:hidden">
@@ -400,7 +435,7 @@ export default function VideoChatPage() {
                             <UserIcon className="w-5 h-5 text-orange-500 translate-y-0.5" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-gray-900 text-sm leading-tight">{opponent?.displayName || opponent?.name || "Opponent"}</h3>
+                            <h3 className="font-bold text-gray-900 text-sm leading-tight">{isConnectedToBot ? botPersona?.name : (opponent?.displayName || opponent?.name || "Opponent")}</h3>
                             <p className="text-[10px] text-green-500 font-bold uppercase tracking-wider">{status === "Connected" ? "Online" : status}</p>
                         </div>
                     </div>

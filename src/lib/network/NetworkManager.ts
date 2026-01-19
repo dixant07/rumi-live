@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { auth } from '@/lib/config/firebase';
 import { VideoConnection } from './VideoConnection';
+import { LocalSignalingSocket, BotPersona } from './LocalBotConnection';
 
 const MATCHMAKING_URL = process.env.NEXT_PUBLIC_MATCHMAKING_URL || 'http://localhost:5000';
 
@@ -25,6 +26,9 @@ export class NetworkManager {
     iceServers: { game: RTCIceServer[], video: RTCIceServer[] } = { game: [], video: [] };
 
     videoConnection: VideoConnection | null = null;
+    localBotConnection: LocalSignalingSocket | null = null;
+    isConnectedToBot: boolean = false;
+    botPersona: BotPersona | null = null;
     isSignalingConnected: boolean = false;
     localStream: MediaStream | null = null;
     private isSearching: boolean = false; // [FIX] Track search state
@@ -130,6 +134,13 @@ export class NetworkManager {
                     // If opponent disconnects socket -> Server sends 'match_skipped'? 
                     // If so, we should arguably re-queue here too. 
                     this.findMatch();
+                });
+
+                // Handle no match found after timeout - connect to local bot
+                this.socket.on('no_match_found', async () => {
+                    console.log('[NetworkManager] No match found, connecting to bot...');
+                    this.isSearching = false;
+                    await this.initializeBotConnection();
                 });
 
                 this.setupSignalingHandlers();
@@ -245,6 +256,100 @@ export class NetworkManager {
         }
     }
 
+    /**
+     * Initialize connection to a local bot when no match is found
+     */
+    async initializeBotConnection() {
+        try {
+            console.log('[NetworkManager] Fetching bot persona...');
+
+            // Fetch random bot from API
+            const response = await fetch('/api/bots?random=true');
+            if (!response.ok) {
+                throw new Error('Failed to fetch bot');
+            }
+
+            const botPersona: BotPersona = await response.json();
+            this.botPersona = botPersona;
+
+            console.log('[NetworkManager] Got bot:', botPersona.name);
+
+            // Tell matchmaking server we're connecting to bot (creates room to mark as busy)
+            if (this.socket && this.isSignalingConnected) {
+                this.socket.emit('join_bot_room', { botId: botPersona.id });
+            }
+
+            // Create local signaling socket that intercepts WebRTC signals
+            const localSocket = new LocalSignalingSocket(botPersona, this.socket);
+            await localSocket.initialize();
+
+            // Store for cleanup
+            this.localBotConnection = localSocket;
+            this.isConnectedToBot = true;
+            this.opponentUid = botPersona.id;
+            this.role = 'A'; // User is always player A when playing with bot
+            this.isInitiator = true;
+            this.roomId = `bot-room-${this.userId}`;
+            this.opponentId = 'bot';
+            this.iceServers = { game: [], video: [] }; // No ICE servers needed for local
+
+            // Create VideoConnection with the fake socket
+            // This makes bot connection use SAME flow as real user connection
+            this.videoConnection = new VideoConnection(
+                localSocket as unknown as Socket,
+                this.eventEmitter
+            );
+
+            await this.videoConnection.initialize({
+                isInitiator: true,
+                opponentId: 'bot',
+                roomId: this.roomId,
+                iceServers: [] // No ICE servers for local connection
+            });
+
+            // Set up signaling handlers on local socket to route to VideoConnection
+            // This is needed because LocalSignalingSocket triggers these events when bot responds
+            localSocket.on('video-answer', (data) => {
+                console.log('[NetworkManager] Bot answer received, routing to VideoConnection');
+                this.videoConnection?.handleAnswer(data as { answer: RTCSessionDescriptionInit });
+            });
+
+            localSocket.on('video-ice-candidate', (data) => {
+                console.log('[NetworkManager] Bot ICE candidate received, routing to VideoConnection');
+                this.videoConnection?.handleCandidate(data as { candidate: RTCIceCandidateInit });
+            });
+
+            // Start local stream
+            if (!this.localStream) {
+                await this.startLocalStream();
+            }
+
+            if (this.localStream) {
+                await this.videoConnection.useLocalStream(this.localStream);
+            }
+
+            // Initiate connection (user is always initiator with bot)
+            await this.videoConnection.createAndSendOffer();
+
+            // Emit match found event (same as regular match!)
+            this.emit('match_found', {
+                roomId: this.roomId,
+                role: 'A',
+                opponentId: 'bot',
+                opponentUid: botPersona.id,
+                isBot: true,
+                botPersona: botPersona
+            });
+
+            console.log('[NetworkManager] Bot connection established via VideoConnection');
+        } catch (error) {
+            console.error('[NetworkManager] Failed to initialize bot connection:', error);
+            this.emit('bot_connection_error', error);
+            // Re-queue for matchmaking
+            this.findMatch();
+        }
+    }
+
     async startLocalStream() {
         if (this.localStream) {
             this.emit('local_video_track', this.localStream);
@@ -333,6 +438,23 @@ export class NetworkManager {
     }
 
     skipMatch() {
+        // Handle bot connection skip
+        if (this.isConnectedToBot) {
+            console.log('[NetworkManager] Skipping bot match...');
+            this.cleanupCurrentMatch();
+            this.emit('match_skipped_client');
+
+            // Tell server we're leaving bot room
+            if (this.socket && this.isSignalingConnected) {
+                this.socket.emit('leave_bot_room');
+            }
+
+            // Re-join matchmaking queue
+            this.findMatch();
+            return;
+        }
+
+        // Handle real user connection skip
         if (this.socket && this.isSignalingConnected) {
             console.log('[NetworkManager] Sending skip_match signal...');
             this.socket.emit('skip_match');
@@ -360,15 +482,26 @@ export class NetworkManager {
         this.eventEmitter.dispatchEvent(new CustomEvent(eventName, { detail }));
     }
     cleanupCurrentMatch() {
+        // Cleanup video connection
         if (this.videoConnection) {
             this.videoConnection.close();
             this.videoConnection = null;
         }
+
+        // Cleanup bot connection
+        if (this.localBotConnection) {
+            this.localBotConnection.close();
+            this.localBotConnection = null;
+        }
+
+        // Reset state
         this.roomId = null;
         this.role = null;
         this.opponentId = null;
         this.opponentUid = null;
         this.isInitiator = false;
         this.iceServers = { game: [], video: [] };
+        this.isConnectedToBot = false;
+        this.botPersona = null;
     }
 }

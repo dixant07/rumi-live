@@ -117,8 +117,6 @@ export class VideoConnection {
                     this.emit('game_leave', data.payload);
                 } else if (data.type === 'game_cancel') {
                     this.emit('game_cancel', data.payload);
-                } else if (data.type === 'bot_avatar') {
-                    this.emit('bot_avatar', data.payload);
                 } else {
                     // Fallback for unknown types or legacy plain text
                     this.emit('chat_message', event.data);

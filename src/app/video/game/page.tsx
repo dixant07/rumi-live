@@ -13,7 +13,8 @@ import {
     Flag,
     Send,
     Loader2,
-    Video // Added import
+    Video,
+    Bot
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { TopBar } from '@/components/layout/TopBar';
@@ -70,6 +71,14 @@ function VideoGameContent() {
         message: '',
         type: 'info'
     });
+
+    // Bot state
+    const [isConnectedToBot, setIsConnectedToBot] = useState(false);
+    const [botPersona, setBotPersona] = useState<{
+        id: string;
+        name: string;
+        avatar: string;
+    } | null>(null);
 
     const { opponent } = useCurrentOpponent();
 
@@ -156,7 +165,18 @@ function VideoGameContent() {
         };
 
         const handleMatchFound = (data: any) => {
-            setStatus("Match Found!");
+            // Check if this is a bot match
+            if (data?.isBot && data?.botPersona) {
+                setStatus(`Connected to ${data.botPersona.name}!`);
+                setIsConnectedToBot(true);
+                setBotPersona(data.botPersona);
+                if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+            } else {
+                setStatus("Match Found!");
+                setIsConnectedToBot(false);
+                setBotPersona(null);
+            }
+
             const currentUserId = networkManager.userId || auth.currentUser?.uid || '';
             const params = new URLSearchParams({
                 roomId: data.roomId,
@@ -262,14 +282,23 @@ function VideoGameContent() {
                 // Hydrate if already in a match (e.g. from Internal Navigation)
                 if (networkManager.roomId && networkManager.opponentId) {
                     console.log("Already in match, hydrating state...");
-                    const matchData = {
-                        roomId: networkManager.roomId,
-                        role: networkManager.role,
-                        opponentId: networkManager.opponentId,
-                        opponentUid: networkManager.opponentUid,
-                        isInitiator: networkManager.isInitiator,
-                    };
-                    handleMatchFound(matchData);
+
+                    // Hydrate bot state from NetworkManager
+                    if (networkManager.isConnectedToBot && networkManager.botPersona) {
+                        console.log('[VideoGamePage] Hydrating bot state:', networkManager.botPersona);
+                        setIsConnectedToBot(true);
+                        setBotPersona(networkManager.botPersona);
+                        setStatus(`Connected to ${networkManager.botPersona.name}!`);
+                    } else {
+                        const matchData = {
+                            roomId: networkManager.roomId,
+                            role: networkManager.role,
+                            opponentId: networkManager.opponentId,
+                            opponentUid: networkManager.opponentUid,
+                            isInitiator: networkManager.isInitiator,
+                        };
+                        handleMatchFound(matchData);
+                    }
 
                 } else if (!networkManager.socket?.connected) {
                     try {
@@ -508,16 +537,26 @@ function VideoGameContent() {
 
                         {/* Remote Video (Top Half) */}
                         <Card className="flex-1 md:flex-1 md:min-h-0 rounded-[1rem] overflow-hidden border-0 shadow-xl bg-[#EAE8D9] relative group p-0">
-                            <video
-                                ref={remoteVideoRef}
-                                autoPlay
-                                playsInline
-                                className="w-full h-full object-cover"
-                            />
+                            {isConnectedToBot && botPersona ? (
+                                // Bot Avatar Display - Full screen image
+                                <img
+                                    src={botPersona.avatar}
+                                    alt={botPersona.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                // Remote Video
+                                <video
+                                    ref={remoteVideoRef}
+                                    autoPlay
+                                    playsInline
+                                    className="w-full h-full object-cover"
+                                />
+                            )}
 
                             {/* Opponent Info */}
                             <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-left">
-                                <p className="font-bold text-sm leading-none">{opponent?.displayName || opponent?.name || "Opponent"}</p>
+                                <p className="font-bold text-sm leading-none">{isConnectedToBot ? botPersona?.name : (opponent?.displayName || opponent?.name || "Opponent")}</p>
                                 <p className="opacity-80 text-[10px] leading-none mt-0.5">{status === "Connected" ? "Online" : status}</p>
                             </div>
 
@@ -584,8 +623,8 @@ function VideoGameContent() {
                                 </Button>
                             </div>
 
-                            {/* Placeholder */}
-                            {!remoteVideoRef.current?.srcObject && (
+                            {/* Placeholder - don't show when connected to bot */}
+                            {!isConnectedToBot && !remoteVideoRef.current?.srcObject && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-[#EAE8D9]">
                                     <div className="text-center text-gray-400">
                                         <div className="w-20 h-20 bg-black/5 rounded-full flex items-center justify-center mx-auto mb-4">

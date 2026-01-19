@@ -4,7 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import { useNetwork } from '@/lib/contexts/NetworkContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Camera, CameraOff, SkipForward } from 'lucide-react';
+import { Mic, MicOff, Camera, CameraOff, SkipForward, Bot } from 'lucide-react';
+
+interface BotPersona {
+    id: string;
+    name: string;
+    avatar: string;
+    systemPrompt?: string;
+}
 
 export function VideoChat() {
     const { networkManager } = useNetwork();
@@ -17,6 +24,10 @@ export function VideoChat() {
     const [messages, setMessages] = useState<{ text: string, isLocal: boolean }[]>([]);
     const [inputText, setInputText] = useState("");
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Bot state
+    const [isConnectedToBot, setIsConnectedToBot] = useState(false);
+    const [botPersona, setBotPersona] = useState<BotPersona | null>(null);
 
     useEffect(() => {
         if (!networkManager) return;
@@ -35,16 +46,33 @@ export function VideoChat() {
             }
         };
 
-        const handleMatchFound = () => {
-            setStatus("Match Found!");
-            setMessages([]); // Clear messages on new match
-            setTimeout(() => setStatus("Connected"), 2000);
+        const handleMatchFound = (data: unknown) => {
+            console.log('[VideoChat] match_found event data:', data);
+            const matchData = data as { isBot?: boolean; botPersona?: BotPersona };
+
+            if (matchData.isBot && matchData.botPersona) {
+                // Bot match
+                setStatus(`Connected to ${matchData.botPersona.name}!`);
+                setIsConnectedToBot(true);
+                setBotPersona(matchData.botPersona);
+                // Clear video since bot has no video stream
+                if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+            } else {
+                // Real user match
+                setStatus("Match Found!");
+                setIsConnectedToBot(false);
+                setBotPersona(null);
+                setTimeout(() => setStatus("Connected"), 2000);
+            }
+            setMessages([]);
         };
 
         const handleQueued = () => {
             setStatus("Searching for opponent...");
             if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
             setMessages([]);
+            setIsConnectedToBot(false);
+            setBotPersona(null);
         };
 
         const handleVideoLost = () => {
@@ -110,20 +138,42 @@ export function VideoChat() {
 
     return (
         <div className="flex flex-col h-full gap-4 p-4 bg-zinc-900 text-white">
-            {/* Remote Video */}
+            {/* Remote Video / Bot Avatar */}
             <Card className="flex-1 relative overflow-hidden bg-black border-zinc-800 min-h-0">
-                <video
-                    ref={remoteVideoRef}
-                    autoPlay
-                    playsInline
-                    className="w-full h-full object-cover"
-                />
-                <div className="absolute top-4 left-4 bg-black/50 px-2 py-1 rounded text-sm">
-                    Remote
+                {isConnectedToBot && botPersona ? (
+                    // Show bot avatar
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900">
+                        <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-blue-500 shadow-lg shadow-blue-500/30 mb-4">
+                            <img
+                                src={botPersona.avatar}
+                                alt={botPersona.name}
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2 text-white">
+                            <Bot className="w-5 h-5 text-blue-400" />
+                            <span className="text-xl font-semibold">{botPersona.name}</span>
+                        </div>
+                        <span className="text-sm text-zinc-400 mt-1">AI Bot</span>
+                    </div>
+                ) : (
+                    // Show remote video
+                    <video
+                        ref={remoteVideoRef}
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-cover"
+                    />
+                )}
+                <div className="absolute top-4 left-4 bg-black/50 px-2 py-1 rounded text-sm flex items-center gap-1">
+                    {isConnectedToBot && <Bot className="w-3 h-3" />}
+                    {isConnectedToBot ? 'Bot' : 'Remote'}
                 </div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/70 px-4 py-2 rounded text-lg font-bold pointer-events-none">
-                    {status}
-                </div>
+                {!isConnectedToBot && (
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/70 px-4 py-2 rounded text-lg font-bold pointer-events-none">
+                        {status}
+                    </div>
+                )}
             </Card>
 
             {/* Chat Area */}
