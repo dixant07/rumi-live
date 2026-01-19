@@ -117,9 +117,17 @@ export class VideoConnection {
                     this.emit('game_leave', data.payload);
                 } else if (data.type === 'game_cancel') {
                     this.emit('game_cancel', data.payload);
+                } else if (data.type === 'bot_info') {
+                    // Bot info received - emit for internal use but don't show in chat
+                    console.log('[VideoConnection] Bot info received:', data.payload);
+                    this.emit('bot_info', data.payload);
+                } else if (data.type === 'typing') {
+                    // Typing indicator - ignore or can emit for UI later
+                    console.log('[VideoConnection] Typing indicator:', data.payload);
+                    // Don't emit as chat message
                 } else {
-                    // Fallback for unknown types or legacy plain text
-                    this.emit('chat_message', event.data);
+                    // Unknown types - log but don't display in chat
+                    console.log('[VideoConnection] Unknown message type:', data.type);
                 }
             } catch (e) {
                 // Not JSON, treat as plain text chat
