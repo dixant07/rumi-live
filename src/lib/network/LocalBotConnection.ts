@@ -42,6 +42,7 @@ type SocketEventHandler = (...args: unknown[]) => void;
 export class LocalSignalingSocket {
     private handlers: Map<string, SocketEventHandler[]> = new Map();
     private botPeerConnection: RTCPeerConnection | null = null;
+    private gamePeerConnection: RTCPeerConnection | null = null; // Separate connection for game
     private bot: BotInstance | null = null;
     private persona: BotPersona;
     private realSocket: unknown; // Store real socket for fallback
@@ -217,6 +218,86 @@ export class LocalSignalingSocket {
     }
 
     /**
+     * Initialize game peer connection for WebRTC game signaling
+     * Called when game is started with bot
+     */
+    async initializeGameConnection(): Promise<void> {
+        if (this.gamePeerConnection) {
+            console.log('[LocalSignaling] Game connection already initialized');
+            return;
+        }
+
+        console.log('[LocalSignaling] Initializing game peer connection');
+        this.gamePeerConnection = new RTCPeerConnection({ iceServers: [] });
+
+        // Route game data channels to bot
+        this.gamePeerConnection.ondatachannel = (event) => {
+            console.log('[LocalSignaling] Bot game received data channel:', event.channel.label);
+            if (event.channel.label === 'game_reliable' || event.channel.label === 'game_unreliable') {
+                this.bot?.setupGameChannel(event.channel);
+            }
+        };
+
+        // Route bot's game ICE candidates back to game iframe
+        this.gamePeerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                console.log('[LocalSignaling] Bot game ICE candidate -> Game iframe');
+                this.trigger('game_signal_candidate', {
+                    candidate: event.candidate.toJSON(),
+                    from: 'bot'
+                });
+            }
+        };
+
+        this.gamePeerConnection.onconnectionstatechange = () => {
+            console.log('[LocalSignaling] Bot game connection state:', this.gamePeerConnection?.connectionState);
+        };
+    }
+
+    /**
+     * Handle game offer from game iframe
+     */
+    async handleGameOffer(data: { offer: RTCSessionDescriptionInit }): Promise<void> {
+        if (!this.gamePeerConnection) {
+            await this.initializeGameConnection();
+        }
+
+        if (!this.gamePeerConnection) {
+            console.error('[LocalSignaling] Game peer connection not initialized');
+            return;
+        }
+
+        try {
+            console.log('[LocalSignaling] Game offer -> Bot');
+            await this.gamePeerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+
+            const answer = await this.gamePeerConnection.createAnswer();
+            await this.gamePeerConnection.setLocalDescription(answer);
+
+            console.log('[LocalSignaling] Bot game answer -> Game iframe');
+            this.trigger('game_signal_answer', {
+                answer: answer,
+                from: 'bot'
+            });
+        } catch (error) {
+            console.error('[LocalSignaling] Error handling game offer:', error);
+        }
+    }
+
+    /**
+     * Handle game ICE candidate from game iframe
+     */
+    async handleGameIceCandidate(data: { candidate: RTCIceCandidateInit }): Promise<void> {
+        if (!this.gamePeerConnection) return;
+
+        try {
+            await this.gamePeerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        } catch (error) {
+            console.error('[LocalSignaling] Error adding game ICE candidate:', error);
+        }
+    }
+
+    /**
      * Cleanup
      */
     close(): void {
@@ -227,6 +308,10 @@ export class LocalSignalingSocket {
         if (this.botPeerConnection) {
             this.botPeerConnection.close();
             this.botPeerConnection = null;
+        }
+        if (this.gamePeerConnection) {
+            this.gamePeerConnection.close();
+            this.gamePeerConnection = null;
         }
         this.handlers.clear();
         console.log('[LocalSignaling] Closed');

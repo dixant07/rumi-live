@@ -17,6 +17,7 @@ export class NetworkManager {
         this.opponentId = null;
         this.isInitiator = false;
         this.iceServers = { game: [] };
+        this.isBot = false; // Flag for bot mode
 
         this.gameConnection = null;
 
@@ -47,7 +48,13 @@ export class NetworkManager {
                 if (GameConfig.MATCH_DATA && GameConfig.MATCH_DATA.mode === 'embedded') {
                     console.log('[NetworkManager] Starting in EMBEDDED mode. Skipping direct socket connection.');
                     this.isEmbedded = true;
+                    this.isBot = GameConfig.MATCH_DATA.isBot || false;
                     this.isSignalingConnected = true; // Virtual connection via parent
+
+                    if (this.isBot) {
+                        console.log('[NetworkManager] BOT MODE ACTIVE - signals will be routed locally');
+                    }
+
                     this.setupEmbeddedHandlers();
 
                     // In embedded mode, we might receive ICE servers from parent via message

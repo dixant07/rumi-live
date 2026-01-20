@@ -82,7 +82,7 @@ function VideoGameContent() {
 
     const { opponent } = useCurrentOpponent();
 
-    // Bridge: NetworkManager -> Iframe
+    // Bridge: NetworkManager -> Iframe (also handles bot game signals)
     useEffect(() => {
         if (!networkManager) return;
 
@@ -106,12 +106,18 @@ function VideoGameContent() {
             networkManager.on('session_established', handleSessionEstablished)
         ];
 
+        // Also listen for bot game signals from LocalSignalingSocket
+        if (networkManager.localBotConnection) {
+            networkManager.localBotConnection.on('game_signal_answer', handleGameAnswer);
+            networkManager.localBotConnection.on('game_signal_candidate', handleGameCandidate);
+        }
+
         return () => {
             unsubs.forEach(u => u());
         };
-    }, [networkManager]);
+    }, [networkManager, networkManager?.localBotConnection]);
 
-    // Bridge: Iframe -> NetworkManager
+    // Bridge: Iframe -> NetworkManager (or Bot for local connections)
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             // Security: In prod, check event.origin === GAME_BASE_URL
@@ -119,7 +125,19 @@ function VideoGameContent() {
 
             if (type === 'game_signal_emit') {
                 if (networkManager) {
-                    networkManager.sendGameSignal(signalEvent, payload);
+                    // If connected to bot, route game signals locally
+                    if (isConnectedToBot && networkManager.localBotConnection) {
+                        console.log('[GamePage] Routing game signal to bot:', signalEvent);
+                        if (signalEvent === 'offer') {
+                            networkManager.localBotConnection.handleGameOffer(payload);
+                        } else if (signalEvent === 'ice-candidate') {
+                            networkManager.localBotConnection.handleGameIceCandidate(payload);
+                        }
+                        // answer signals are not sent by initiator
+                    } else {
+                        // Route to matchmaking server for real users
+                        networkManager.sendGameSignal(signalEvent, payload);
+                    }
                 }
             } else if (type === 'request_ice_servers') {
                 if (networkManager && iframeRef.current && iframeRef.current.contentWindow) {
@@ -134,7 +152,7 @@ function VideoGameContent() {
 
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
-    }, [networkManager]);
+    }, [networkManager, isConnectedToBot]);
 
 
 
@@ -218,6 +236,7 @@ function VideoGameContent() {
                 mode: 'embedded',
                 userId: currentUserId,
                 isInitiator: 'true',
+                isBot: isConnectedToBot ? 'true' : 'false',
                 serverUrl: encodeURIComponent(MATCHMAKING_URL)
             });
             setGameUrl(`${GAME_BASE_URL}/${gameId}?${params.toString()}`);
@@ -505,6 +524,7 @@ function VideoGameContent() {
                                                             mode: 'embedded',
                                                             userId: networkManager?.userId || auth.currentUser?.uid || '',
                                                             isInitiator: 'false',
+                                                            isBot: isConnectedToBot ? 'true' : 'false',
                                                             serverUrl: encodeURIComponent(MATCHMAKING_URL)
                                                         });
                                                         setGameUrl(`${GAME_BASE_URL}/${incomingInvite.gameId}?${params.toString()}`);

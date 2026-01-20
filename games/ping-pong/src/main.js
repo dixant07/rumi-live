@@ -21,6 +21,7 @@ GameConfig.MATCH_DATA = {
     opponentId: urlParams.get('opponentId'),
     opponentUid: urlParams.get('opponentUid'),
     isInitiator: urlParams.get('isInitiator') === 'true',
+    isBot: urlParams.get('isBot') === 'true',
     mode: urlParams.get('mode'),
     iceServers: processIceServers(urlParams.get('iceServers'))
 };
