@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/lib/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -102,6 +104,14 @@ function HeroVideoCarousel() {
 
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const { user, loading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/home');
+    }
+  }, [user, loading, router]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -165,39 +175,49 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-6 z-10">
+      {/* Hero Section */}
+      <section className="relative pt-24 pb-20 px-6 z-10">
         <div className="max-w-7xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-white/50 mb-8 backdrop-blur-md shadow-sm animate-fade-in-up">
             <Sparkles className="w-4 h-4 text-amber-500" />
             <span className="text-sm font-medium text-zinc-600">The most fun way to meet people</span>
           </div>
 
-          <h1 className="text-6xl md:text-8xl font-bold mb-8 leading-[1.1] tracking-tight">
-            <span className="block text-zinc-900">Start a conversation.</span>
+          <h1 className="text-5xl md:text-7xl font-black mb-6 leading-[1.1] tracking-tight">
+            <span className="block text-zinc-900 drop-shadow-sm">Stop Swiping.</span>
+            <span className="block text-zinc-900 drop-shadow-sm">Start Playing.</span>
             <span className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 bg-clip-text text-transparent">
-              Play a game.
+              Welcome to Rumi.
             </span>
           </h1>
 
-          <p className="text-xl text-zinc-600 max-w-2xl mx-auto mb-12 leading-relaxed font-normal">
-            Meet amazing people from around the world. Video chat with high quality,
-            break the ice with fun mini-games, and make lasting connections.
+          <p className="text-xl md:text-2xl text-zinc-600 max-w-3xl mx-auto mb-4 leading-relaxed font-medium">
+            Don’t Just Watch. <span className="text-zinc-900 font-bold">Play.</span> <span className="text-zinc-900 font-bold">Talk.</span> <span className="text-zinc-900 font-bold">Connect.</span>
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
+          <p className="text-lg text-zinc-500 max-w-2xl mx-auto mb-8 leading-relaxed">
+            Meet amazing people from around the world. Video chat with high quality, break the ice with fun mini-games, and make lasting connections.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <Link href="/signup">
-              <Button size="lg" className="h-14 bg-zinc-900 hover:bg-zinc-800 text-white text-lg px-8 rounded-full shadow-xl shadow-zinc-200 hover:shadow-2xl hover:scale-105 transition-all duration-300">
-                <Play className="w-5 h-5 mr-2 fill-current" />
-                Start Chatting Now
+              <Button size="lg" className="h-16 bg-zinc-900 hover:bg-zinc-800 text-white text-xl px-10 rounded-full shadow-2xl shadow-zinc-300 hover:shadow-orange-500/20 hover:scale-105 transition-all duration-300 border border-zinc-800">
+                <Play className="w-6 h-6 mr-2 fill-current" />
+                Start Rumi-ing
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="h-14 bg-white/50 border-white/60 hover:bg-white text-zinc-700 text-lg px-8 rounded-full shadow-lg shadow-zinc-100 backdrop-blur-sm transition-all duration-300">
-              Watch Demo
-            </Button>
+            <a href="#demo-video" onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('demo-video')?.scrollIntoView({ behavior: 'smooth' });
+            }}>
+              <Button size="lg" variant="outline" className="h-16 bg-white/50 border-white/60 hover:bg-white text-zinc-700 text-xl px-10 rounded-full shadow-lg shadow-zinc-100 backdrop-blur-sm transition-all duration-300">
+                Watch Demo
+              </Button>
+            </a>
           </div>
 
           {/* Hero Video/Visual */}
-          <div className="relative max-w-5xl mx-auto">
+          <div id="demo-video" className="relative max-w-5xl mx-auto scroll-mt-32">
             <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-pink-600 rounded-[2rem] blur-3xl opacity-10 -z-10 transform scale-105"></div>
             <div className="relative bg-white/40 border border-white/60 rounded-[2rem] p-3 backdrop-blur-xl shadow-2xl shadow-zinc-200/50">
               <div className="aspect-video bg-black rounded-[1.5rem] overflow-hidden relative group border border-white/50">
@@ -300,8 +320,13 @@ export default function LandingPage() {
       <section id="how-it-works" className="py-24 px-6 relative z-10 bg-white/40 backdrop-blur-sm border-y border-white/60">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold mb-4 text-zinc-900">It's incredibly simple</h2>
-            <p className="text-zinc-600">Start making friends in under 60 seconds</p>
+            <h2 className="text-4xl md:text-5xl font-black mb-6 text-zinc-900 tracking-tight">
+              You’re the Frick. <br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500">We Found Your Frack.</span>
+            </h2>
+            <p className="text-zinc-600 text-xl max-w-2xl mx-auto font-medium">
+              Start making friends in under 60 seconds
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-12 relative">
@@ -341,11 +366,13 @@ export default function LandingPage() {
       </section>
 
       {/* Games Section */}
-      <section id="games" className="py-24 px-0 z-10 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 mb-12">
+      <section id="games" className="py-24 px-0 z-10 relative overflow-hidden bg-gradient-to-b from-transparent to-white/50">
+        <div className="max-w-7xl mx-auto px-6 mb-16">
           <div className="text-center">
-            <h2 className="text-4xl font-bold mb-4 text-zinc-900 tracking-tight">Break the ice with games</h2>
-            <p className="text-zinc-600 text-lg max-w-xl mx-auto">
+            <h2 className="text-5xl md:text-7xl font-black mb-6 text-zinc-900 tracking-tighter uppercase">
+              Game On. <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-600">Camera On.</span>
+            </h2>
+            <p className="text-zinc-600 text-xl max-w-2xl mx-auto font-medium leading-relaxed">
               Awkward silences are a thing of the past. Jump into a game and let the fun begin.
             </p>
           </div>
@@ -452,7 +479,7 @@ export default function LandingPage() {
             <div className="absolute top-0 right-0 w-64 h-64 bg-orange-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-pink-200/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
 
-            <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight text-zinc-900 relative z-10">
+            <h2 className="text-4xl md:text-6xl font-black mb-8 tracking-tight text-zinc-900 relative z-10 leading-tight">
               Ready to meet your<br />
               <span className="bg-gradient-to-r from-orange-500 to-pink-600 bg-clip-text text-transparent">new best friend?</span>
             </h2>
