@@ -28,6 +28,7 @@ declare global {
 
 interface BotInstance {
     setRole(role: 'A' | 'B'): void;
+    setGameType?(gameType: string | null): void;
     setupChatChannel(channel: RTCDataChannel): void;
     setupGameChannel(channel: RTCDataChannel): void;
     cleanup(): void;
@@ -256,8 +257,17 @@ export class LocalSignalingSocket {
 
     /**
      * Handle game offer from game iframe
+     * @param data - The offer data containing the RTCSessionDescriptionInit
+     * @param gameType - Optional game type to ensure bot AI is initialized before channels open
      */
-    async handleGameOffer(data: { offer: RTCSessionDescriptionInit }): Promise<void> {
+    async handleGameOffer(data: { offer: RTCSessionDescriptionInit }, gameType?: string | null): Promise<void> {
+        // CRITICAL: Set game type BEFORE initializing game connection
+        // This ensures the bot's gameAI is created before data channels open
+        if (gameType && this.bot?.setGameType) {
+            console.log('[LocalSignaling] Setting game type before processing offer:', gameType);
+            this.bot.setGameType(gameType);
+        }
+
         if (!this.gamePeerConnection) {
             await this.initializeGameConnection();
         }
@@ -294,6 +304,28 @@ export class LocalSignalingSocket {
             await this.gamePeerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
         } catch (error) {
             console.error('[LocalSignaling] Error adding game ICE candidate:', error);
+        }
+    }
+
+    /**
+     * Set the game type for the bot
+     * Accepts any game ID string - the bot will handle validation internally
+     */
+    setGameType(gameType: string | null): void {
+        console.log(`[LocalSignaling] setGameType called with: ${gameType}`);
+        if (this.bot) {
+            console.log('[LocalSignaling] Calling bot.setGameType');
+            try {
+                if (this.bot.setGameType) {
+                    this.bot.setGameType(gameType);
+                } else {
+                    console.warn('[LocalSignaling] Bot instance does not support setGameType');
+                }
+            } catch (e) {
+                console.error('[LocalSignaling] Error calling bot.setGameType:', e);
+            }
+        } else {
+            console.warn('[LocalSignaling] Cannot set game type: Bot instance is null');
         }
     }
 

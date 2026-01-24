@@ -19,6 +19,7 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { TopBar } from '@/components/layout/TopBar';
 import { GameList } from '@/components/games/GameList';
+import { games } from '@/app/(main)/game-catalog/data';
 import { GameFrame } from '@/components/games/GameFrame'; // Added import
 import { useCurrentOpponent } from '@/lib/contexts/OpponentContext';
 import { ReportModal } from '@/components/dialogs/ReportModal';
@@ -119,6 +120,17 @@ function VideoGameContent() {
 
     // Bridge: Iframe -> NetworkManager (or Bot for local connections)
     useEffect(() => {
+        // Helper to extract game type from current game URL
+        // Dynamically checks against all game IDs from the catalog
+        const extractGameTypeFromUrl = (url: string): string | null => {
+            for (const game of games) {
+                if (url.includes(`/${game.id}`)) {
+                    return game.id;
+                }
+            }
+            return null;
+        };
+
         const handleMessage = (event: MessageEvent) => {
             // Security: In prod, check event.origin === GAME_BASE_URL
             const { type, event: signalEvent, payload } = event.data;
@@ -129,7 +141,10 @@ function VideoGameContent() {
                     if (isConnectedToBot && networkManager.localBotConnection) {
                         console.log('[GamePage] Routing game signal to bot:', signalEvent);
                         if (signalEvent === 'offer') {
-                            networkManager.localBotConnection.handleGameOffer(payload);
+                            // Extract current game type from the game iframe URL
+                            const currentGameType = extractGameTypeFromUrl(gameUrl);
+                            console.log('[GamePage] Passing game type to bot:', currentGameType);
+                            networkManager.localBotConnection.handleGameOffer(payload, currentGameType);
                         } else if (signalEvent === 'ice-candidate') {
                             networkManager.localBotConnection.handleGameIceCandidate(payload);
                         }
@@ -152,7 +167,7 @@ function VideoGameContent() {
 
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
-    }, [networkManager, isConnectedToBot]);
+    }, [networkManager, isConnectedToBot, gameUrl]);
 
 
 
@@ -189,6 +204,13 @@ function VideoGameContent() {
                 setIsConnectedToBot(true);
                 setBotPersona(data.botPersona);
                 if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+
+                // [FIX] Set game type if we already know it (e.g. autoStart)
+                const gameId = searchParams.get('gameId');
+                if (gameId && networkManager?.localBotConnection) {
+                    console.log('[GamePage] Setting bot game type (Match Found) to:', gameId);
+                    networkManager.localBotConnection.setGameType(gameId);
+                }
             } else {
                 setStatus("Match Found!");
                 setIsConnectedToBot(false);
@@ -351,6 +373,12 @@ function VideoGameContent() {
         const gameId = searchParams.get('gameId');
 
         if (autoStart === 'true' && gameId && networkManager?.roomId) {
+            // [FIX] Ensure bot has the correct game type set
+            if (isConnectedToBot && networkManager?.localBotConnection) {
+                console.log('[GamePage] Setting bot game type (AutoStart) to:', gameId);
+                networkManager.localBotConnection.setGameType(gameId);
+            }
+
             const currentUserId = networkManager.userId || auth.currentUser?.uid || '';
             const params = new URLSearchParams({
                 roomId: networkManager.roomId,

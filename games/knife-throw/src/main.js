@@ -21,8 +21,14 @@ CONFIG.MATCH_DATA = {
     opponentId: urlParams.get('opponentId'),
     opponentUid: urlParams.get('opponentUid'),
     isInitiator: urlParams.get('isInitiator') === 'true',
+    isBot: urlParams.get('isBot') === 'true',
     mode: urlParams.get('mode')
 };
+
+// Log if playing against bot
+if (CONFIG.MATCH_DATA.isBot) {
+    console.log('[Main] Playing against BOT - signals will be routed locally');
+}
 
 // Override server URL if provided via URL parameter (for embedded games)
 const serverUrl = urlParams.get('serverUrl');
