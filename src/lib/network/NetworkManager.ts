@@ -138,6 +138,16 @@ export class NetworkManager {
 
                 // Handle no match found after timeout - connect to local bot
                 this.socket.on('no_match_found', async () => {
+                    // [FIX] safeguard against race condition where match_found (invite) happened just before timeout
+                    if (this.roomId) {
+                        console.warn('[NetworkManager] Ignored no_match_found because we are already in a room:', this.roomId);
+                        return;
+                    }
+                    if (!this.isSearching) {
+                        console.warn('[NetworkManager] Ignored no_match_found because we are not searching.');
+                        return;
+                    }
+
                     console.log('[NetworkManager] No match found, connecting to bot...');
                     this.isSearching = false;
                     await this.initializeBotConnection();
