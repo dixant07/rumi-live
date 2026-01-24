@@ -31,7 +31,7 @@ export async function POST(request: Request) {
         if (!process.env.GOOGLE_AI_API_KEY) {
             // Return mock response if no API key
             return NextResponse.json({
-                response: `[Mock] I received: "${message}". Configure GOOGLE_AI_API_KEY for real responses.`
+                response: `I don't want to talk. Skip me!`
             });
         }
 
