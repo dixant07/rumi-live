@@ -16,9 +16,15 @@ GameConfig.MATCH_DATA = {
     opponentId: urlParams.get('opponentId'),
     opponentUid: urlParams.get('opponentUid'),
     isInitiator: urlParams.get('isInitiator') === 'true',
+    isBot: urlParams.get('isBot') === 'true',
     mode: urlParams.get('mode'),
     iceServers: processIceServers(urlParams.get('iceServers'))
 };
+
+// Log if playing against bot
+if (GameConfig.MATCH_DATA.isBot) {
+    console.log('[Main] Playing against BOT - signals will be routed locally');
+}
 
 function processIceServers(iceServersStr) {
     if (!iceServersStr) return null;
