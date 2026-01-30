@@ -27,6 +27,8 @@ import { auth } from '@/lib/config/firebase';
 import { MessageCircle } from 'lucide-react';
 import { useChat } from '@/lib/contexts/ChatContext';
 import { AlertModal } from '@/components/ui/alert-modal';
+import { FilterSelector } from '@/components/video/FilterSelector';
+import { useFilter } from '@/lib/contexts/FilterContext';
 
 export default function VideoGamePage() {
     return (
@@ -82,6 +84,19 @@ function VideoGameContent() {
     } | null>(null);
 
     const { opponent } = useCurrentOpponent();
+    const { initializePipeline, getFilteredStream, activeFilter, isReady } = useFilter();
+
+    // Update video source when filter changes or when pipeline becomes ready
+    useEffect(() => {
+        if (!localVideoRef.current) return;
+
+        // Get the appropriate stream based on filter state
+        const stream = getFilteredStream();
+        if (stream && localVideoRef.current.srcObject !== stream) {
+            console.log('[VideoGamePage] Switching to', activeFilter ? 'filtered' : 'original', 'stream');
+            localVideoRef.current.srcObject = stream;
+        }
+    }, [activeFilter, isReady, getFilteredStream]);
 
     // Bridge: NetworkManager -> Iframe (also handles bot game signals)
     useEffect(() => {
@@ -182,10 +197,15 @@ function VideoGameContent() {
     useEffect(() => {
         if (!networkManager) return;
 
-        const handleLocalStream = (data: unknown) => {
+        const handleLocalStream = async (data: unknown) => {
             const stream = data as MediaStream;
+            // Initialize filter pipeline first
+            await initializePipeline(stream);
+
+            // Then set the video source to the appropriate stream
             if (localVideoRef.current) {
-                localVideoRef.current.srcObject = stream;
+                const displayStream = getFilteredStream() || stream;
+                localVideoRef.current.srcObject = displayStream;
             }
         };
 
@@ -300,11 +320,21 @@ function VideoGameContent() {
             networkManager.on('game_cancel', handleGameCancel)
         ];
 
-        if (networkManager.localStream && localVideoRef.current) {
-            localVideoRef.current.srcObject = networkManager.localStream;
-        } else if (networkManager.videoConnection?.localStream && localVideoRef.current) {
-            // Fallback to videoConnection if for some reason localStream isn't set but VC has it
-            localVideoRef.current.srcObject = networkManager.videoConnection.localStream;
+        // Initial check if already connected or start local stream
+        const setupExistingStream = async (stream: MediaStream) => {
+            // Initialize filter pipeline with existing stream
+            await initializePipeline(stream);
+            // Use filtered stream if filter is active
+            if (localVideoRef.current) {
+                const displayStream = getFilteredStream() || stream;
+                localVideoRef.current.srcObject = displayStream;
+            }
+        };
+
+        if (networkManager.localStream) {
+            setupExistingStream(networkManager.localStream);
+        } else if (networkManager.videoConnection?.localStream) {
+            setupExistingStream(networkManager.videoConnection.localStream);
         } else {
             // Initiate local stream if not already
             networkManager.startLocalStream().catch(console.error);
@@ -698,6 +728,9 @@ function VideoGameContent() {
                             <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-xs font-bold z-10">
                                 You
                             </div>
+
+                            {/* Filter Selector */}
+                            <FilterSelector position="bottom-right" />
 
                             {/* Floating Messages Overlay (Desktop Only) */}
                             <div className="hidden md:flex absolute bottom-4 left-4 right-4 flex-col justify-end pointer-events-none gap-2 z-10 min-h-[120px]">

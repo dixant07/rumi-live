@@ -25,6 +25,8 @@ import { auth } from '@/lib/config/firebase';
 import { useChat } from '@/lib/contexts/ChatContext';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AlertModal } from '@/components/ui/alert-modal';
+import { FilterSelector } from '@/components/video/FilterSelector';
+import { useFilter } from '@/lib/contexts/FilterContext';
 
 export default function VideoChatPage() {
     const { networkManager } = useNetwork();
@@ -62,14 +64,32 @@ export default function VideoChatPage() {
     } | null>(null);
 
     const { opponent } = useCurrentOpponent();
+    const { initializePipeline, getFilteredStream, activeFilter, isReady } = useFilter();
+
+    // Update video source when filter changes or when pipeline becomes ready
+    useEffect(() => {
+        if (!localVideoRef.current) return;
+
+        // Get the appropriate stream based on filter state
+        const stream = getFilteredStream();
+        if (stream && localVideoRef.current.srcObject !== stream) {
+            console.log('[VideoChatPage] Switching to', activeFilter ? 'filtered' : 'original', 'stream');
+            localVideoRef.current.srcObject = stream;
+        }
+    }, [activeFilter, isReady, getFilteredStream]);
 
     useEffect(() => {
         if (!networkManager) return;
 
-        const handleLocalStream = (data: unknown) => {
+        const handleLocalStream = async (data: unknown) => {
             const stream = data as MediaStream;
+            // Initialize filter pipeline first
+            await initializePipeline(stream);
+
+            // Then set the video source to the appropriate stream
             if (localVideoRef.current) {
-                localVideoRef.current.srcObject = stream;
+                const displayStream = getFilteredStream() || stream;
+                localVideoRef.current.srcObject = displayStream;
             }
         };
 
@@ -120,11 +140,20 @@ export default function VideoChatPage() {
         ];
 
         // Initial check if already connected or start local stream
-        if (networkManager.localStream && localVideoRef.current) {
-            localVideoRef.current.srcObject = networkManager.localStream;
-        } else if (networkManager.videoConnection?.localStream && localVideoRef.current) {
-            // Fallback to videoConnection if for some reason localStream isn't set but VC has it
-            localVideoRef.current.srcObject = networkManager.videoConnection.localStream;
+        const setupExistingStream = async (stream: MediaStream) => {
+            // Initialize filter pipeline with existing stream
+            await initializePipeline(stream);
+            // Use filtered stream if filter is active
+            if (localVideoRef.current) {
+                const displayStream = getFilteredStream() || stream;
+                localVideoRef.current.srcObject = displayStream;
+            }
+        };
+
+        if (networkManager.localStream) {
+            setupExistingStream(networkManager.localStream);
+        } else if (networkManager.videoConnection?.localStream) {
+            setupExistingStream(networkManager.videoConnection.localStream);
         } else {
             // Initiate local stream if not already
             networkManager.startLocalStream().catch(console.error);
@@ -252,6 +281,8 @@ export default function VideoChatPage() {
                     <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-xs font-medium hidden md:block">
                         You
                     </div>
+                    {/* Filter Selector */}
+                    <FilterSelector position="bottom-right" />
                 </Card>
 
                 {/* Middle: Remote Video (Fullscreen on Mobile) */}

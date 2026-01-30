@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" width="200" height="80">
+  <defs>
+    <!-- Gradient for lens tint -->
+    <linearGradient id="lensGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#16213e;stop-opacity:0.95" />
+    </linearGradient>
+    <!-- Subtle reflection gradient -->
+    <linearGradient id="reflectionGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.15" />
+      <stop offset="50%" style="stop-color:#ffffff;stop-opacity:0" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Frame outline - aviator style -->
+  <g fill="none" stroke="#2d2d2d" stroke-width="3" stroke-linecap="round">
+    <!-- Left lens frame -->
+    <path d="M15,40 Q15,20 35,18 L70,18 Q90,20 90,40 Q90,65 55,65 Q15,65 15,40" />
+    <!-- Right lens frame -->
+    <path d="M110,40 Q110,20 130,18 L165,18 Q185,20 185,40 Q185,65 150,65 Q110,65 110,40" />
+    <!-- Bridge -->
+    <path d="M90,35 Q100,30 110,35" />
+  </g>
+  
+  <!-- Left lens -->
+  <path d="M18,40 Q18,23 37,21 L68,21 Q87,23 87,40 Q87,62 54,62 Q18,62 18,40" 
+        fill="url(#lensGradient)" />
+  <!-- Left lens reflection -->
+  <path d="M25,35 Q25,28 40,26 L55,26 Q65,28 65,35" 
+        fill="url(#reflectionGradient)" />
+  
+  <!-- Right lens -->
+  <path d="M113,40 Q113,23 132,21 L163,21 Q182,23 182,40 Q182,62 149,62 Q113,62 113,40" 
+        fill="url(#lensGradient)" />
+  <!-- Right lens reflection -->
+  <path d="M120,35 Q120,28 135,26 L150,26 Q160,28 160,35" 
+        fill="url(#reflectionGradient)" />
+  
+  <!-- Temple arms (sides) -->
+  <g fill="none" stroke="#2d2d2d" stroke-width="4" stroke-linecap="round">
+    <path d="M15,30 L5,28" />
+    <path d="M185,30 L195,28" />
+  </g>
+</svg>
