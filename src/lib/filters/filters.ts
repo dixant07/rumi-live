@@ -96,19 +96,42 @@ export const FILTERS: Filter[] = [
             },
         ],
     },
-    // Placeholder for future filters - will be populated when user provides assets
-    // {
-    //     id: 'dog-ears',
-    //     name: 'Puppy',
-    //     icon: '🐶',
-    //     overlays: [...],
-    // },
-    // {
-    //     id: 'crown',
-    //     name: 'Royal Crown', 
-    //     icon: '👑',
-    //     overlays: [...],
-    // },
+    {
+        id: 'puppy',
+        name: 'Puppy',
+        icon: '🐶',
+        overlays: [
+            {
+                // Puppy ears and nose - anchored to temples/ears
+                src: '/filters/puppy.svg',
+                anchorPoints: {
+                    left: FACE_LANDMARKS.LEFT_EAR,
+                    right: FACE_LANDMARKS.RIGHT_EAR,
+                    top: FACE_LANDMARKS.FOREHEAD,
+                },
+                scale: 1.4,
+                offsetY: -0.25,
+            },
+        ],
+    },
+    {
+        id: 'crown',
+        name: 'Royal Crown',
+        icon: '👑',
+        overlays: [
+            {
+                // Crown - anchored to forehead/temples
+                src: '/filters/crown.svg',
+                anchorPoints: {
+                    left: FACE_LANDMARKS.LEFT_EYEBROW_OUTER,
+                    right: FACE_LANDMARKS.RIGHT_EYEBROW_OUTER,
+                    top: FACE_LANDMARKS.FOREHEAD,
+                },
+                scale: 1.5,
+                offsetY: -0.35,
+            },
+        ],
+    },
 ];
 
 /**

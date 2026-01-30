@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="200" height="120">
+  <defs>
+    <!-- Gold gradient for crown -->
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#B8860B;stop-opacity:1" />
+    </linearGradient>
+    <!-- Shine effect -->
+    <linearGradient id="shineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.4" />
+      <stop offset="50%" style="stop-color:#FFFFFF;stop-opacity:0" />
+    </linearGradient>
+    <!-- Jewel gradients -->
+    <radialGradient id="rubyGradient" cx="50%" cy="30%" r="50%">
+      <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B0000;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="emeraldGradient" cx="50%" cy="30%" r="50%">
+      <stop offset="0%" style="stop-color:#50C878;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#006400;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="sapphireGradient" cx="50%" cy="30%" r="50%">
+      <stop offset="0%" style="stop-color:#6495ED;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00008B;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Crown base -->
+  <path d="M10,100 L10,70 L40,85 L70,50 L100,30 L130,50 L160,85 L190,70 L190,100 Z" 
+        fill="url(#goldGradient)" stroke="#8B6914" stroke-width="2"/>
+  
+  <!-- Crown shine -->
+  <path d="M10,100 L10,70 L40,85 L70,50 L100,30 L130,50 L160,85 L190,70 L190,100 Z" 
+        fill="url(#shineGradient)"/>
+  
+  <!-- Crown rim -->
+  <rect x="5" y="95" width="190" height="15" rx="3" fill="url(#goldGradient)" stroke="#8B6914" stroke-width="2"/>
+  <rect x="5" y="95" width="190" height="8" fill="url(#shineGradient)" opacity="0.5"/>
+  
+  <!-- Crown points decorations (circles at tips) -->
+  <circle cx="10" cy="70" r="6" fill="url(#goldGradient)" stroke="#8B6914" stroke-width="1"/>
+  <circle cx="40" cy="85" r="5" fill="url(#goldGradient)" stroke="#8B6914" stroke-width="1"/>
+  <circle cx="70" cy="50" r="6" fill="url(#goldGradient)" stroke="#8B6914" stroke-width="1"/>
+  <circle cx="100" cy="30" r="8" fill="url(#goldGradient)" stroke="#8B6914" stroke-width="1"/>
+  <circle cx="130" cy="50" r="6" fill="url(#goldGradient)" stroke="#8B6914" stroke-width="1"/>
+  <circle cx="160" cy="85" r="5" fill="url(#goldGradient)" stroke="#8B6914" stroke-width="1"/>
+  <circle cx="190" cy="70" r="6" fill="url(#goldGradient)" stroke="#8B6914" stroke-width="1"/>
+  
+  <!-- Jewels on rim -->
+  <ellipse cx="50" cy="102" rx="8" ry="6" fill="url(#rubyGradient)" stroke="#8B0000" stroke-width="1"/>
+  <ellipse cx="100" cy="102" rx="10" ry="7" fill="url(#sapphireGradient)" stroke="#00008B" stroke-width="1"/>
+  <ellipse cx="150" cy="102" rx="8" ry="6" fill="url(#emeraldGradient)" stroke="#006400" stroke-width="1"/>
+  
+  <!-- Center jewel on main point -->
+  <circle cx="100" cy="30" r="5" fill="url(#rubyGradient)" stroke="#8B0000" stroke-width="1"/>
+</svg>
