@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useNetwork } from '@/lib/contexts/NetworkContext';
+import { useGuest } from '@/lib/contexts/GuestContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { TopBar } from '@/components/layout/TopBar';
+import { GuestTopBar } from '@/components/layout/GuestTopBar';
 import { useCurrentOpponent } from '@/lib/contexts/OpponentContext';
 import { ReportModal } from '@/components/dialogs/ReportModal';
 import { auth } from '@/lib/config/firebase';
@@ -30,6 +32,7 @@ import { useFilter } from '@/lib/contexts/FilterContext';
 
 export default function VideoChatPage() {
     const { networkManager } = useNetwork();
+    const { isGuest } = useGuest();
     const router = useRouter();
     const { messages, sendMessage, clearMessages } = useChat();
 
@@ -67,6 +70,7 @@ export default function VideoChatPage() {
     const { initializePipeline, getFilteredStream, activeFilter, isReady } = useFilter();
 
     // Update video source when filter changes or when pipeline becomes ready
+    // Also replace the WebRTC track to send filtered video to peer
     useEffect(() => {
         if (!localVideoRef.current) return;
 
@@ -75,8 +79,15 @@ export default function VideoChatPage() {
         if (stream && localVideoRef.current.srcObject !== stream) {
             console.log('[VideoChatPage] Switching to', activeFilter ? 'filtered' : 'original', 'stream');
             localVideoRef.current.srcObject = stream;
+
+            // Also replace the video track in WebRTC connection to send filtered video
+            if (networkManager?.videoConnection) {
+                networkManager.videoConnection.replaceVideoTrack(stream).catch((err) => {
+                    console.error('[VideoChatPage] Failed to replace video track:', err);
+                });
+            }
         }
-    }, [activeFilter, isReady, getFilteredStream]);
+    }, [activeFilter, isReady, getFilteredStream, networkManager]);
 
     useEffect(() => {
         if (!networkManager) return;
@@ -263,8 +274,8 @@ export default function VideoChatPage() {
 
     return (
         <div className="flex h-screen flex-col bg-[#FFF8F0] overflow-hidden">
-            {/* Header */}
-            <TopBar mode={mode} onModeChange={handleModeToggle} />
+            {/* Header - Show GuestTopBar for guests, regular TopBar for authenticated users */}
+            {isGuest ? <GuestTopBar mode={mode} onModeChange={handleModeToggle} /> : <TopBar mode={mode} onModeChange={handleModeToggle} />}
 
             {/* Main Content */}
             <main className="flex-1 flex md:p-2 gap-0 md:gap-2 overflow-hidden relative">
@@ -277,6 +288,7 @@ export default function VideoChatPage() {
                         playsInline
                         muted
                         className="w-full h-full object-cover"
+                        style={{ transform: 'scaleX(-1)' }}
                     />
                     <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-xs font-medium hidden md:block">
                         You

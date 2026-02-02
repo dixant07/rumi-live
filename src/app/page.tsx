@@ -5,8 +5,17 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/lib/contexts/AuthContext';
+import { useGuest } from '@/lib/contexts/GuestContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Video,
   Gamepad2,
@@ -21,7 +30,8 @@ import {
   Sparkles,
   Heart,
   ArrowRight,
-  ChevronLeft
+  ChevronLeft,
+  UserCircle
 } from 'lucide-react';
 // import Video from 'next-video'; // We will use standard video tag for now to ensure compatibility with duplicated files in /videos if next-video component has issues
 import { ComponentProps } from 'react';
@@ -105,13 +115,47 @@ function HeroVideoCarousel() {
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, loading } = useUser();
+  const { joinAsGuest, isGuest } = useGuest();
   const router = useRouter();
+
+  // Guest join form state
+  const [guestName, setGuestName] = useState('');
+  const [guestGender, setGuestGender] = useState<'male' | 'female' | ''>('');
+  const [guestError, setGuestError] = useState('');
+  const [isJoiningAsGuest, setIsJoiningAsGuest] = useState(false);
+
+  const handleGuestJoin = () => {
+    setGuestError('');
+
+    if (!guestName.trim()) {
+      setGuestError('Please enter your name');
+      return;
+    }
+    if (!guestGender) {
+      setGuestError('Please select your gender');
+      return;
+    }
+
+    setIsJoiningAsGuest(true);
+    try {
+      joinAsGuest(guestName, guestGender);
+      router.push('/video/chat');
+    } catch (error) {
+      console.error('Failed to join as guest:', error);
+      setGuestError('Failed to join. Please try again.');
+      setIsJoiningAsGuest(false);
+    }
+  };
 
   useEffect(() => {
     if (!loading && user) {
       router.push('/home');
     }
-  }, [user, loading, router]);
+    // If already a guest, redirect to video chat
+    if (isGuest) {
+      router.push('/video/chat');
+    }
+  }, [user, loading, router, isGuest]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -199,7 +243,7 @@ export default function LandingPage() {
             Meet amazing people from around the world. Video chat with high quality, break the ice with fun mini-games, and make lasting connections.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <Link href="/signup">
               <Button size="lg" className="h-16 bg-zinc-900 hover:bg-zinc-800 text-white text-xl px-10 rounded-full shadow-2xl shadow-zinc-300 hover:shadow-orange-500/20 hover:scale-105 transition-all duration-300 border border-zinc-800">
                 <Play className="w-6 h-6 mr-2 fill-current" />
@@ -214,6 +258,65 @@ export default function LandingPage() {
                 Watch Demo
               </Button>
             </a>
+          </div>
+
+          {/* Guest Join Section */}
+          <div className="max-w-md mx-auto mb-16">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex-1 h-px bg-zinc-200"></div>
+              <span className="text-sm text-zinc-500 font-medium">or try instantly</span>
+              <div className="flex-1 h-px bg-zinc-200"></div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-white/60">
+              <div className="flex items-center gap-2 mb-4">
+                <UserCircle className="w-5 h-5 text-orange-500" />
+                <span className="text-sm font-medium text-zinc-700">Join as Guest</span>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Input
+                    placeholder="Enter your name"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    className="h-12 rounded-xl border-zinc-200 focus:border-orange-500 focus:ring-orange-500"
+                    maxLength={30}
+                  />
+                </div>
+
+                <div>
+                  <Select
+                    value={guestGender}
+                    onValueChange={(value: 'male' | 'female') => setGuestGender(value)}
+                  >
+                    <SelectTrigger className="h-12 rounded-xl border-zinc-200 focus:border-orange-500 focus:ring-orange-500">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {guestError && (
+                  <p className="text-red-500 text-sm">{guestError}</p>
+                )}
+
+                <Button
+                  onClick={handleGuestJoin}
+                  disabled={isJoiningAsGuest}
+                  className="w-full h-12 bg-gradient-to-r from-orange-500 to-pink-600 hover:opacity-90 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 transition-all duration-300"
+                >
+                  {isJoiningAsGuest ? 'Joining...' : 'Join Now'}
+                </Button>
+
+                <p className="text-xs text-zinc-400 text-center">
+                  No signup required. Start video chatting instantly!
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Hero Video/Visual */}

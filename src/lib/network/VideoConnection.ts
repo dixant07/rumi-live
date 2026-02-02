@@ -290,6 +290,35 @@ export class VideoConnection {
         }
     }
 
+    /**
+     * Replace the video track being sent over WebRTC (for filter switching)
+     * @param newStream The new MediaStream containing the video track to use
+     */
+    async replaceVideoTrack(newStream: MediaStream) {
+        if (!this.peerConnection) {
+            console.warn('[VideoConnection] Cannot replace track - no peer connection');
+            return;
+        }
+
+        const newVideoTrack = newStream.getVideoTracks()[0];
+        if (!newVideoTrack) {
+            console.warn('[VideoConnection] New stream has no video track');
+            return;
+        }
+
+        // Find the sender that's sending video
+        const videoSender = this.peerConnection.getSenders().find(
+            sender => sender.track?.kind === 'video'
+        );
+
+        if (videoSender) {
+            console.log('[VideoConnection] Replacing video track with filtered stream');
+            await videoSender.replaceTrack(newVideoTrack);
+        } else {
+            console.warn('[VideoConnection] No video sender found to replace track');
+        }
+    }
+
     stopLocalMedia() {
         if (this.localStream) {
             this.localStream.getTracks().forEach(track => track.stop());

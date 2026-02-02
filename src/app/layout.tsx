@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NetworkProvider } from "@/lib/contexts/NetworkContext";
 import { UserProvider } from "@/lib/contexts/AuthContext";
+import { GuestProvider } from "@/lib/contexts/GuestContext";
 import { OpponentProvider } from "@/lib/contexts/OpponentContext";
 import { ChatProvider } from "@/lib/contexts/ChatContext";
 import { FilterProvider } from "@/lib/contexts/FilterContext";
@@ -45,21 +46,23 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NetworkProvider>
-          <UserProvider>
-            <AuthGuard>
-              <OpponentProvider>
-                <ChatProvider>
-                  <FilterProvider>
-                    {children}
-                    <BottomNav />
-                    <Toaster />
-                  </FilterProvider>
-                </ChatProvider>
-              </OpponentProvider>
-            </AuthGuard>
-          </UserProvider>
-        </NetworkProvider>
+        <GuestProvider>
+          <NetworkProvider>
+            <UserProvider>
+              <AuthGuard>
+                <OpponentProvider>
+                  <ChatProvider>
+                    <FilterProvider>
+                      {children}
+                      <BottomNav />
+                      <Toaster />
+                    </FilterProvider>
+                  </ChatProvider>
+                </OpponentProvider>
+              </AuthGuard>
+            </UserProvider>
+          </NetworkProvider>
+        </GuestProvider>
       </body>
     </html>
   );

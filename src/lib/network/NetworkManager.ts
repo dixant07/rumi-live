@@ -2,6 +2,7 @@ import { io, Socket } from 'socket.io-client';
 import { auth } from '@/lib/config/firebase';
 import { VideoConnection } from './VideoConnection';
 import { LocalSignalingSocket, BotPersona } from './LocalBotConnection';
+import { GuestProfile } from '@/lib/contexts/GuestContext';
 
 const MATCHMAKING_URL = process.env.NEXT_PUBLIC_MATCHMAKING_URL || 'http://localhost:5000';
 
@@ -33,6 +34,7 @@ export class NetworkManager {
     localStream: MediaStream | null = null;
     private isSearching: boolean = false; // [FIX] Track search state
     private lastPreferences: any = {};    // [FIX] Store prefs for re-queueing
+    private guestProfile: GuestProfile | null = null; // Guest user profile
 
     constructor() {
         this.eventEmitter = new EventTarget();
@@ -52,11 +54,32 @@ export class NetworkManager {
         });
     }
 
+    setGuestProfile(profile: GuestProfile) {
+        this.guestProfile = profile;
+        this.userId = profile.id;
+        console.log('[NetworkManager] Guest profile set:', profile);
+    }
+
+    isGuest(): boolean {
+        return this.guestProfile !== null;
+    }
+
     async connect() {
         return new Promise<void>(async (resolve, reject) => {
             try {
                 let token = null;
-                if (auth.currentUser) {
+                let guestData: { id: string; gender: string; name: string } | null = null;
+
+                if (this.guestProfile) {
+                    // Guest mode - no Firebase token
+                    this.userId = this.guestProfile.id;
+                    guestData = {
+                        id: this.guestProfile.id,
+                        gender: this.guestProfile.gender,
+                        name: this.guestProfile.name,
+                    };
+                    console.log('[NetworkManager] Connecting as guest:', this.guestProfile.id);
+                } else if (auth.currentUser) {
                     token = await auth.currentUser.getIdToken();
                     this.userId = auth.currentUser.uid;
                 } else {
@@ -64,7 +87,12 @@ export class NetworkManager {
                 }
 
                 this.socket = io(MATCHMAKING_URL, {
-                    auth: { token },
+                    auth: {
+                        token,
+                        userId: guestData?.id,
+                        gender: guestData?.gender,
+                        guestName: guestData?.name,
+                    },
                     path: '/socket.io',
                     transports: ['websocket', 'polling']
                 });

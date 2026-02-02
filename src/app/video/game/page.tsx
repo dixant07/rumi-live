@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useNetwork } from '@/lib/contexts/NetworkContext';
+import { useGuest } from '@/lib/contexts/GuestContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { TopBar } from '@/components/layout/TopBar';
+import { GuestTopBar } from '@/components/layout/GuestTopBar';
 import { GameList } from '@/components/games/GameList';
 import { games } from '@/app/(main)/game-catalog/data';
 import { GameFrame } from '@/components/games/GameFrame'; // Added import
@@ -46,6 +48,7 @@ const MATCHMAKING_URL = process.env.NEXT_PUBLIC_MATCHMAKING_URL || "http://local
 
 function VideoGameContent() {
     const { networkManager } = useNetwork();
+    const { isGuest } = useGuest();
     const router = useRouter();
     const searchParams = useSearchParams();
     const { messages, sendMessage, clearMessages } = useChat();
@@ -87,6 +90,7 @@ function VideoGameContent() {
     const { initializePipeline, getFilteredStream, activeFilter, isReady } = useFilter();
 
     // Update video source when filter changes or when pipeline becomes ready
+    // Also replace the WebRTC track to send filtered video to peer
     useEffect(() => {
         if (!localVideoRef.current) return;
 
@@ -95,8 +99,15 @@ function VideoGameContent() {
         if (stream && localVideoRef.current.srcObject !== stream) {
             console.log('[VideoGamePage] Switching to', activeFilter ? 'filtered' : 'original', 'stream');
             localVideoRef.current.srcObject = stream;
+
+            // Also replace the video track in WebRTC connection to send filtered video
+            if (networkManager?.videoConnection) {
+                networkManager.videoConnection.replaceVideoTrack(stream).catch((err) => {
+                    console.error('[VideoGamePage] Failed to replace video track:', err);
+                });
+            }
         }
-    }, [activeFilter, isReady, getFilteredStream]);
+    }, [activeFilter, isReady, getFilteredStream, networkManager]);
 
     // Bridge: NetworkManager -> Iframe (also handles bot game signals)
     useEffect(() => {
@@ -485,7 +496,8 @@ function VideoGameContent() {
 
     return (
         <div className="flex h-screen flex-col bg-[#FFF8F0]">
-            <TopBar mode={mode} onModeChange={handleModeToggle} />
+            {/* Header - Show GuestTopBar for guests, regular TopBar for authenticated users */}
+            {isGuest ? <GuestTopBar mode={mode} onModeChange={handleModeToggle} /> : <TopBar mode={mode} onModeChange={handleModeToggle} />}
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col-reverse md:flex-row p-0 md:p-2 gap-2 overflow-hidden">
@@ -722,6 +734,7 @@ function VideoGameContent() {
                                 playsInline
                                 muted
                                 className="w-full h-full object-cover"
+                                style={{ transform: 'scaleX(-1)' }}
                             />
 
                             {/* Status Badge (Moved to top-left) */}
