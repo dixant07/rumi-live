@@ -56,6 +56,8 @@ export async function POST(request: Request) {
         });
 
         // Send message and get response
+        // wait for 2 seconds before sending message
+        await new Promise(resolve => setTimeout(resolve, 2000));
         const result = await chat.sendMessage(message);
         const response = result.response.text();
 
