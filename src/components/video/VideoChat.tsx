@@ -5,6 +5,7 @@ import { useNetwork } from '@/lib/contexts/NetworkContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Camera, CameraOff, SkipForward, Bot } from 'lucide-react';
+import { toast } from "sonner";
 
 interface BotPersona {
     id: string;
@@ -52,7 +53,10 @@ export function VideoChat() {
 
             if (matchData.isBot && matchData.botPersona) {
                 // Bot match
-                setStatus(`Connected to ${matchData.botPersona.name}!`);
+                const isQueueMode = (matchData as any).isQueueMode;
+                setStatus(isQueueMode
+                    ? `Playing with ${matchData.botPersona.name} (Still Searching...)`
+                    : `Connected to ${matchData.botPersona.name}!`);
                 setIsConnectedToBot(true);
                 setBotPersona(matchData.botPersona);
                 // Clear video since bot has no video stream

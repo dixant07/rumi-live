@@ -29,6 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { AlertModal } from '@/components/ui/alert-modal';
 import { FilterSelector } from '@/components/video/FilterSelector';
 import { useFilter } from '@/lib/contexts/FilterContext';
+import { toast } from "sonner";
 
 export default function VideoChatPage() {
     const { networkManager } = useNetwork();
@@ -120,12 +121,23 @@ export default function VideoChatPage() {
                 setStatus("Connected");
                 setIsConnectedToBot(true);
                 setBotPersona(matchData.botPersona);
+
+                console.log("[VideoChatPage] Triggering bot toast");
+                toast(`Your vibe is rare! 😎 Until we find a match, play with ${matchData.botPersona.name} 🤖`, {
+                    duration: 5000,
+                });
+
                 // Clear video since bot has no video stream
                 if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
             } else {
                 setStatus("Match Found!");
                 setIsConnectedToBot(false);
                 setBotPersona(null);
+
+                console.log("[VideoChatPage] Triggering human toast");
+                toast("We found your vibe twin — say hello! 🔥", {
+                    duration: 5000,
+                });
             }
             // context handles it on match_found event.
         };

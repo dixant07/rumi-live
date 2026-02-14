@@ -55,7 +55,7 @@ export default function RootLayout({
                     <FilterProvider>
                       {children}
                       <BottomNav />
-                      <Toaster />
+                      <Toaster position="top-center" richColors />
                     </FilterProvider>
                   </ChatProvider>
                 </OpponentProvider>

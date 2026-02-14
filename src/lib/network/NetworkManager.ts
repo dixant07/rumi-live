@@ -164,11 +164,21 @@ export class NetworkManager {
                     this.findMatch();
                 });
 
-                // Handle no match found after timeout - connect to local bot
+                // Handle server trigger for bot mode (keep searching in background)
+                this.socket.on('start_bot_mode', async () => {
+                    if (this.roomId) {
+                        console.warn('[NetworkManager] Ignored start_bot_mode because we are already in a room:', this.roomId);
+                        return;
+                    }
+                    console.log('[NetworkManager] Starting bot mode (while keeping queue active)...');
+                    await this.initializeBotConnection(true); // true = keep searching
+                });
+
+                // Handle no match found (Legacy timeout or explicit fallback)
                 this.socket.on('no_match_found', async () => {
                     // [FIX] safeguard against race condition where match_found (invite) happened just before timeout
-                    if (this.roomId) {
-                        console.warn('[NetworkManager] Ignored no_match_found because we are already in a room:', this.roomId);
+                    if (this.roomId && !this.isConnectedToBot) {
+                        console.warn('[NetworkManager] Ignored no_match_found because we are already in a real room:', this.roomId);
                         return;
                     }
                     if (!this.isSearching) {
@@ -177,8 +187,10 @@ export class NetworkManager {
                     }
 
                     console.log('[NetworkManager] No match found, connecting to bot...');
+                    // This legacy path assumes we stop searching (or maybe not? Let's check server logic)
+                    // If server emitted this, it REMOVED us from queue. So we need to stop searching flag.
                     this.isSearching = false;
-                    await this.initializeBotConnection();
+                    await this.initializeBotConnection(false);
                 });
 
                 this.setupSignalingHandlers();
@@ -254,6 +266,12 @@ export class NetworkManager {
             console.log('[NetworkManager] msg.iceServers is MISSING or NULL');
         }
 
+        // [New Logic] If we are playing with a bot, CLEAN IT UP SILENTLY first
+        if (this.isConnectedToBot) {
+            console.log('[NetworkManager] Real match found! Teardown bot connection...');
+            this.teardownBotConnection();
+        }
+
         this.roomId = msg.roomId;
         this.role = msg.role;
         this.opponentId = msg.opponentId; // Keep as Socket ID
@@ -295,9 +313,10 @@ export class NetworkManager {
     }
 
     /**
-     * Initialize connection to a local bot when no match is found
+     * Initialize connection to a local bot
+     * @param keepSearching If true, we don't clear the isSearching flag.
      */
-    async initializeBotConnection() {
+    async initializeBotConnection(keepSearching: boolean = false) {
         try {
             console.log('[NetworkManager] Fetching bot persona...');
 
@@ -313,6 +332,10 @@ export class NetworkManager {
             console.log('[NetworkManager] Got bot:', botPersona.name);
 
             // Tell matchmaking server we're connecting to bot (creates room to mark as busy)
+            // [NOTE] Logic Change: If we want to stay in queue, we maybe shouldn't tell server we are 'busy'?
+            // Actually, if we are in 'queue' mode, 'join_bot_room' might mark us as unavailable?
+            // Let's check server 'join_bot_room'. It just joins a socket room. doesn't remove from queue.
+            // BUT, if we are in a 'queue', we might get matched.
             if (this.socket && this.isSignalingConnected) {
                 this.socket.emit('join_bot_room', { botId: botPersona.id });
             }
@@ -330,6 +353,13 @@ export class NetworkManager {
             this.roomId = `bot-room-${this.userId}`;
             this.opponentId = 'bot';
             this.iceServers = { game: [], video: [] }; // No ICE servers needed for local
+
+            // [CRITICAL] Do NOT clear isSearching if we are just filling time
+            if (!keepSearching) {
+                this.isSearching = false;
+            } else {
+                console.log('[NetworkManager] Bot connected via "fill time". Queue search continues...');
+            }
 
             // Create VideoConnection with the fake socket
             // This makes bot connection use SAME flow as real user connection
@@ -376,15 +406,18 @@ export class NetworkManager {
                 opponentId: 'bot',
                 opponentUid: botPersona.id,
                 isBot: true,
-                botPersona: botPersona
+                botPersona: botPersona,
+                isQueueMode: keepSearching // Flag for UI to show "Searching..." matches
             });
 
             console.log('[NetworkManager] Bot connection established via VideoConnection');
         } catch (error) {
             console.error('[NetworkManager] Failed to initialize bot connection:', error);
             this.emit('bot_connection_error', error);
-            // Re-queue for matchmaking
-            this.findMatch();
+            // Re-queue for matchmaking only if we weren't already searching
+            if (!keepSearching) {
+                this.findMatch();
+            }
         }
     }
 
@@ -413,10 +446,12 @@ export class NetworkManager {
     }
 
     async findMatch(preferences = {}) {
-        if (this.roomId) {
+        if (this.roomId && !this.isConnectedToBot) {
             console.warn('[NetworkManager] Already in a match, ignoring findMatch request.');
             return;
         }
+        // If connected to bot, we CAN search.
+
         this.isSearching = true; // [FIX] Set flag
         this.lastPreferences = preferences; // [FIX] Store prefs
 
@@ -469,6 +504,13 @@ export class NetworkManager {
     // Also clear flag if user cancels manually (if you have a cancel function)
     cancelSearch() {
         this.isSearching = false;
+
+        // Cleanup potential bot session
+        if (this.isConnectedToBot) {
+            this.teardownBotConnection();
+            this.emit('match_skipped_client'); // Reset UI
+        }
+
         if (this.socket && this.isSignalingConnected) {
             // actually tell the server to remove us
             this.socket.emit('leave_queue');
@@ -479,15 +521,11 @@ export class NetworkManager {
         // Handle bot connection skip
         if (this.isConnectedToBot) {
             console.log('[NetworkManager] Skipping bot match...');
-            this.cleanupCurrentMatch();
+            this.teardownBotConnection(); // Safe helper
             this.emit('match_skipped_client');
 
-            // Tell server we're leaving bot room
-            if (this.socket && this.isSignalingConnected) {
-                this.socket.emit('leave_bot_room');
-            }
-
-            // Re-join matchmaking queue
+            // Re-join matchmaking queue if we want to continue?
+            // Usually skip means "NEXT".
             this.findMatch();
             return;
         }
@@ -519,8 +557,23 @@ export class NetworkManager {
     private emit(eventName: string, detail?: unknown) {
         this.eventEmitter.dispatchEvent(new CustomEvent(eventName, { detail }));
     }
+
     cleanupCurrentMatch() {
-        // Cleanup video connection
+        this.teardownBotConnection();
+
+        // Reset state
+        this.roomId = null;
+        this.role = null;
+        this.opponentId = null;
+        this.opponentUid = null;
+        this.isInitiator = false;
+        this.iceServers = { game: [], video: [] };
+    }
+
+    private teardownBotConnection() {
+        // Cleanup video connection (only if it's the bot one?)
+        // Since we only have one 'videoConnection' reference, we assume it's the bot one 
+        // if isConnectedToBot is set.
         if (this.videoConnection) {
             this.videoConnection.close();
             this.videoConnection = null;
@@ -532,13 +585,11 @@ export class NetworkManager {
             this.localBotConnection = null;
         }
 
-        // Reset state
-        this.roomId = null;
-        this.role = null;
-        this.opponentId = null;
-        this.opponentUid = null;
-        this.isInitiator = false;
-        this.iceServers = { game: [], video: [] };
+        // Leave server bot room
+        if (this.socket && this.isSignalingConnected && this.isConnectedToBot) {
+            this.socket.emit('leave_bot_room');
+        }
+
         this.isConnectedToBot = false;
         this.botPersona = null;
     }

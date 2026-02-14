@@ -31,6 +31,7 @@ import { useChat } from '@/lib/contexts/ChatContext';
 import { AlertModal } from '@/components/ui/alert-modal';
 import { FilterSelector } from '@/components/video/FilterSelector';
 import { useFilter } from '@/lib/contexts/FilterContext';
+import { toast } from "sonner";
 
 export default function VideoGamePage() {
     return (
@@ -234,6 +235,12 @@ function VideoGameContent() {
                 setStatus(`Connected to ${data.botPersona.name}!`);
                 setIsConnectedToBot(true);
                 setBotPersona(data.botPersona);
+
+                console.log("[VideoGamePage] Triggering bot toast");
+                toast(`Your vibe is rare! 😎 Until we find a match, play with ${data.botPersona.name} 🤖`, {
+                    duration: 5000,
+                });
+
                 if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
 
                 // [FIX] Set game type if we already know it (e.g. autoStart)
@@ -246,6 +253,11 @@ function VideoGameContent() {
                 setStatus("Match Found!");
                 setIsConnectedToBot(false);
                 setBotPersona(null);
+
+                console.log("[VideoGamePage] Triggering human toast");
+                toast("We found your vibe twin — say hello! 🔥", {
+                    duration: 5000,
+                });
             }
 
             const currentUserId = networkManager.userId || auth.currentUser?.uid || '';
