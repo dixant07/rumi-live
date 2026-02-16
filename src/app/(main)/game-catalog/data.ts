@@ -62,7 +62,7 @@ export const games: Game[] = [
         category: 'Icebreaker',
         image: '/dumb-charades.png', // Placeholder
         route: '/video/game',
-        isAvailable: false,
+        isAvailable: true,
     },
     {
         id: 'doodle-guess',
