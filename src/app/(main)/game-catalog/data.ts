@@ -49,6 +49,14 @@ export const games: Game[] = [
         isAvailable: false,
     },
     {
+        id: 'bingo',
+        title: 'BINGO',
+        category: 'Strategy',
+        image: '/bingo.png', // Placeholder
+        route: '/video/game',
+        isAvailable: true,
+    },
+    {
         id: 'bowling',
         title: 'BOWLING',
         category: 'Action',
