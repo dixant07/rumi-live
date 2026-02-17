@@ -7,30 +7,33 @@ export interface Game {
     isAvailable: boolean;
 }
 
+// change to game order: Dumb Charades, Doodle Guess, Bingo, Tic Tac Toe, Connect Four, Knife Throw, Ping Pong
+// comment Darts and Bowling
+
 export const games: Game[] = [
     {
-        id: 'knife-throw',
-        title: 'KNIFE THROW',
-        category: 'Action',
-        image: '/knife-throw.png',
+        id: 'dumb-charades',
+        title: 'DUMB CHARADES',
+        category: 'Icebreaker',
+        image: '/dumb-charades.png', // Placeholder
         route: '/video/game',
         isAvailable: true,
     },
     {
-        id: 'ping-pong',
-        title: 'PING PONG',
-        category: 'Action',
-        image: '/ping-pong.png',
+        id: 'doodle-guess',
+        title: 'DOODLE GUESS',
+        category: 'Icebreaker',
+        image: '/doodle-guess.png', // Placeholder
         route: '/video/game',
         isAvailable: true,
     },
     {
-        id: 'darts',
-        title: 'DARTS',
+        id: 'bingo',
+        title: 'BINGO',
         category: 'Strategy',
-        image: '/darts.png', // Placeholder
+        image: '/bingo.png', // Placeholder
         route: '/video/game',
-        isAvailable: false,
+        isAvailable: true,
     },
     {
         id: 'tic-tac-toe',
@@ -49,37 +52,78 @@ export const games: Game[] = [
         isAvailable: false,
     },
     {
-        id: 'bingo',
-        title: 'BINGO',
-        category: 'Strategy',
-        image: '/bingo.png', // Placeholder
+        id: 'knife-throw',
+        title: 'KNIFE THROW',
+        category: 'Action',
+        image: '/knife-throw.png',
         route: '/video/game',
         isAvailable: true,
     },
     {
-        id: 'bowling',
-        title: 'BOWLING',
-        category: 'Action',
-        image: '/bowling.png', // Placeholder
+        id: 'flames',
+        title: 'FLAMES',
+        category: 'Icebreaker',
+        image: '/flames.png',
         route: '/video/game',
         isAvailable: false,
     },
     {
-        id: 'dumb-charades',
-        title: 'DUMB CHARADES',
+        id: 'gossip',
+        title: 'GOSSIP',
         category: 'Icebreaker',
-        image: '/dumb-charades.png', // Placeholder
+        image: '/gossip.png',
         route: '/video/game',
-        isAvailable: true,
+        isAvailable: false,
     },
     {
-        id: 'doodle-guess',
-        title: 'DOODLE GUESS',
+        id: 'guess-the-person',
+        title: 'GUESS THE PERSON',
         category: 'Icebreaker',
-        image: '/doodle-guess.png', // Placeholder
+        image: '/guess-the-person.png',
         route: '/video/game',
-        isAvailable: true,
+        isAvailable: false,
     },
+    {
+        id: 'truth-and-dare',
+        title: 'TRUTH AND DARE',
+        category: 'Icebreaker',
+        image: '/truth-and-dare.png',
+        route: '/video/game',
+        isAvailable: false,
+    },
+    {
+        id: 'guess-the-logo',
+        title: 'GUESS THE Logo',
+        category: 'Puzzle',
+        image: '/guess-the-logo.png',
+        route: '/video/game',
+        isAvailable: false,
+    },
+
+    // {
+    //     id: 'ping-pong',
+    //     title: 'PING PONG',
+    //     category: 'Action',
+    //     image: '/ping-pong.png',
+    //     route: '/video/game',
+    //     isAvailable: true,
+    // },
+    // {
+    //     id: 'darts',
+    //     title: 'DARTS',
+    //     category: 'Strategy',
+    //     image: '/darts.png', // Placeholder
+    //     route: '/video/game',
+    //     isAvailable: false,
+    // },
+    // {
+    //     id: 'bowling',
+    //     title: 'BOWLING',
+    //     category: 'Action',
+    //     image: '/bowling.png', // Placeholder
+    //     route: '/video/game',
+    //     isAvailable: false,
+    // },
 ];
 
 export const categories = [
