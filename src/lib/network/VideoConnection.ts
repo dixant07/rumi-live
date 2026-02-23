@@ -27,6 +27,8 @@ export class VideoConnection {
     roomId: string | null = null;
     dataChannel: RTCDataChannel | null = null;
     iceServers: RTCIceServer[] = [];
+    private iceRestartAttempts: number = 0;
+    private readonly MAX_ICE_RESTARTS = 2;
 
     constructor(socket: Socket, eventEmitter: EventTarget) {
         this.socket = socket;
@@ -72,6 +74,7 @@ export class VideoConnection {
 
             if (this.peerConnection?.connectionState === 'connected') {
                 this.isConnected = true;
+                this.iceRestartAttempts = 0; // Reset on successful connection
                 this.emit('video_connection_established');
 
                 this.socket.emit('connection_stable', {
@@ -83,9 +86,15 @@ export class VideoConnection {
                 this.isConnected = false;
                 this.emit('video_connection_unstable');
             } else if (this.peerConnection?.connectionState === 'failed') {
-                console.log('[VideoConnection] Connection failed (terminal)');
-                this.isConnected = false;
-                this.emit('video_connection_lost');
+                if (this.iceRestartAttempts < this.MAX_ICE_RESTARTS) {
+                    this.iceRestartAttempts++;
+                    console.log(`[VideoConnection] ICE failed — attempting ICE restart (${this.iceRestartAttempts}/${this.MAX_ICE_RESTARTS})`);
+                    this.restartIce();
+                } else {
+                    console.log('[VideoConnection] Connection failed (terminal) — all ICE restarts exhausted');
+                    this.isConnected = false;
+                    this.emit('video_connection_lost');
+                }
             }
         };
 
@@ -215,6 +224,29 @@ export class VideoConnection {
             });
         } catch (err) {
             console.error('[VideoConnection] Error creating offer:', err);
+        }
+    }
+
+    async restartIce() {
+        if (!this.peerConnection) return;
+        // Only the initiator creates the new offer for ICE restart
+        if (!this.isInitiator) {
+            console.log('[VideoConnection] Not initiator — waiting for ICE restart offer from peer');
+            return;
+        }
+        try {
+            console.log('[VideoConnection] Creating ICE restart offer...');
+            const offer = await this.peerConnection.createOffer({ iceRestart: true });
+            await this.peerConnection.setLocalDescription(offer);
+            this.socket.emit('video-offer', {
+                offer: offer,
+                to: this.opponentId
+            });
+        } catch (err) {
+            console.error('[VideoConnection] ICE restart offer failed:', err);
+            // All attempts failed — give up and emit terminal event
+            this.isConnected = false;
+            this.emit('video_connection_lost');
         }
     }
 
