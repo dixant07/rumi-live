@@ -39,27 +39,8 @@ import { ComponentProps } from 'react';
 function HeroVideoCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // In a real implementation using next-video, you would import these
-  // import video1 from '../../videos/rumi-2.mp4';
-  // and use them in the source.
-  // For now, next-video sync likely created assets in public/videos or similar, 
-  // but to be safe and immediate, we will use the raw paths or processed paths if known.
-  // Since we haven't seen the output of sync yet, let's assume we can reference the files we know exist.
-  // Actually, next-video usually requires importing the file to work with the Video component.
-  // Let's stick to standard video tags pointing to our duplicated files for the MVP carousel, 
-  // as next-video component usage requires the types to be perfectly generated and imported.
-
   const videos = [
-    '/rumi-2.mp4',
-    // We don't have real other videos, using the duplicates I created. 
-    // Ideally these would be different files.
-    // '/videos/demo-1.mp4', // These are not in public, they are in root/videos. 
-    // To serve them to the browser, next-video must process them.
-    // If next-video sync worked, it might have put processed files in .next/static or similar, 
-    // but without using the import syntax, we can't easily access them.
-    // So for this step, I will use the one public video we have and simulate 'different' videos 
-    // or if I can move the demo files to public temporarily for the carousel verification.
-    '/rumi-2.mp4' // Using same video for demo purposes as requested by user to just have the structure
+    'https://firebasestorage.googleapis.com/v0/b/rumi-live.firebasestorage.app/o/rumi-2.webm?alt=media&token=5bb76bf7-f01f-4c8f-8127-75fda5278e84',
   ];
 
   const handleNext = () => {
