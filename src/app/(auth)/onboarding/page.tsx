@@ -93,6 +93,38 @@ export default function OnboardingPage() {
         setLoading(true);
         setError('');
 
+        // Manual validation for fields that browser can't validate (custom Selects, interests)
+        if (!formData.displayName.trim()) {
+            setError('Display name is required.');
+            setLoading(false);
+            return;
+        }
+        if (!formData.dob) {
+            setError('Date of birth is required.');
+            setLoading(false);
+            return;
+        }
+        if (!formData.gender) {
+            setError('Please select your gender.');
+            setLoading(false);
+            return;
+        }
+        if (!formData.region) {
+            setError('Please select your region.');
+            setLoading(false);
+            return;
+        }
+        if (!formData.language) {
+            setError('Please select your language.');
+            setLoading(false);
+            return;
+        }
+        if (formData.interests.length === 0) {
+            setError('Please select at least one interest.');
+            setLoading(false);
+            return;
+        }
+
         try {
             const user = auth.currentUser;
             if (!user) throw new Error('No user logged in');

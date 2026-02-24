@@ -29,6 +29,7 @@ export class VideoConnection {
     iceServers: RTCIceServer[] = [];
     private iceRestartAttempts: number = 0;
     private readonly MAX_ICE_RESTARTS = 2;
+    private handshakeTimeout: ReturnType<typeof setTimeout> | null = null;
 
     constructor(socket: Socket, eventEmitter: EventTarget) {
         this.socket = socket;
@@ -103,6 +104,18 @@ export class VideoConnection {
             this.remoteStream = event.streams[0];
             this.emit('remote_video_track', event.streams[0]);
         };
+
+        // Non-initiator: start a handshake timeout.
+        // If the peer never sends an offer (crashed, left, network issue),
+        // we'd wait forever on a black screen. Bail out after 15s.
+        if (!this.isInitiator) {
+            this.handshakeTimeout = setTimeout(() => {
+                if (this.peerConnection?.signalingState === 'stable' && !this.isConnected) {
+                    console.warn('[VideoConnection] Handshake timeout — peer never sent an offer. Treating as lost.');
+                    this.emit('video_connection_lost');
+                }
+            }, 15000);
+        }
     }
 
     setupDataChannel(channel: RTCDataChannel) {
@@ -256,6 +269,12 @@ export class VideoConnection {
             return;
         }
 
+        // Offer received — clear the handshake timeout, peer is alive
+        if (this.handshakeTimeout) {
+            clearTimeout(this.handshakeTimeout);
+            this.handshakeTimeout = null;
+        }
+
         try {
             console.log(`[VideoConnection] Received offer from: ${data.from}`);
             if (data.offer) {
@@ -359,8 +378,10 @@ export class VideoConnection {
     }
 
     close() {
-        // Do NOT stop local media here automatically, as it might be managed by proper owner (NetworkManager)
-        // this.stopLocalMedia(); 
+        if (this.handshakeTimeout) {
+            clearTimeout(this.handshakeTimeout);
+            this.handshakeTimeout = null;
+        }
 
         if (this.dataChannel) {
             this.dataChannel.close();
