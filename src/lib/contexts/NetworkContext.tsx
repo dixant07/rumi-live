@@ -5,6 +5,12 @@ import { NetworkManager } from '@/lib/network/NetworkManager';
 import { auth } from '@/lib/config/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { useGuest } from '@/lib/contexts/GuestContext';
+import {
+    trackJoinQueue,
+    trackMatchFound,
+    trackMatchEnded,
+    trackQueueTimeout
+} from '@/lib/utils/analytics';
 
 interface NetworkContextType {
     networkManager: NetworkManager | null;
@@ -44,6 +50,45 @@ export const NetworkProvider = ({ children }: { children: React.ReactNode }) => 
             if (currentUser) {
                 const manager = new NetworkManager();
                 setNetworkManager(manager);
+
+                // ── Analytics: wire up matchmaking events ──────────────────
+                let matchStartTime = 0;
+
+                // User entered queue — track when socket emits 'queued'
+                manager.on('queued', () => {
+                    matchStartTime = Date.now();
+                    trackJoinQueue({
+                        mode: 'random',
+                        user_type: 'registered',
+                    });
+                });
+
+                // A human or bot match was found
+                manager.on('match_found', (data: any) => {
+                    trackMatchFound({
+                        is_bot: !!data?.isBot,
+                        opponent_type: data?.isBot ? 'bot' : 'human',
+                        match_id: data?.roomId || '',
+                    });
+                    matchStartTime = Date.now(); // reset timer to match start
+                });
+
+                // Match ended (skip / opponent left)
+                manager.on('match_skipped_client', () => {
+                    const durationSeconds = matchStartTime
+                        ? Math.round((Date.now() - matchStartTime) / 1000)
+                        : 0;
+                    trackMatchEnded({
+                        duration_seconds: durationSeconds,
+                        reason: 'skipped',
+                        is_bot: false,
+                        match_id: '',
+                    });
+                    matchStartTime = 0;
+                });
+
+                // No human found in time — bot fallback was triggered
+                manager.on('bot_connection_error', () => trackQueueTimeout());
             } else {
                 if (networkManager) {
                     networkManager.disconnect();

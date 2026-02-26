@@ -12,6 +12,7 @@ import { Loader2, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useGuest } from '@/lib/contexts/GuestContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { trackLogin } from '@/lib/utils/analytics';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -60,6 +61,7 @@ export default function LoginPage() {
 
             const token = await userCredential.user.getIdToken();
             const data = await syncUserWithBackend(token);
+            trackLogin('email'); // ← Analytics
 
             if (data.user && !data.user.isOnboarded) {
                 router.push('/onboarding');
@@ -81,6 +83,7 @@ export default function LoginPage() {
             const userCredential = await signInWithPopup(auth, googleProvider);
             const token = await userCredential.user.getIdToken();
             const data = await syncUserWithBackend(token);
+            trackLogin('google'); // ← Analytics
 
             if (data.user && !data.user.isOnboarded) {
                 router.push('/onboarding');
@@ -100,6 +103,7 @@ export default function LoginPage() {
             setGuestError('Please enter your name');
             return;
         }
+        trackLogin('guest'); // ← Analytics
         joinAsGuest(guestName.trim(), guestGender);
         router.push('/video/chat');
     };

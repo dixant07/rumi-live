@@ -12,6 +12,7 @@ import { Loader2, MailCheck, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useGuest } from '@/lib/contexts/GuestContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { trackSignUp, trackLogin } from '@/lib/utils/analytics';
 
 export default function SignupPage() {
     const router = useRouter();
@@ -58,6 +59,7 @@ export default function SignupPage() {
             const displayName = `${firstName} ${lastName}`.trim();
             await updateProfile(userCredential.user, { displayName });
             await sendEmailVerification(userCredential.user);
+            trackSignUp('email'); // ← Analytics
             setEmailSent(true);
         } catch (err: any) {
             setError(err.message || 'Failed to create account');
@@ -74,6 +76,7 @@ export default function SignupPage() {
             const userCredential = await signInWithPopup(auth, googleProvider);
             const token = await userCredential.user.getIdToken();
             const data = await syncUserWithBackend(token);
+            trackLogin('google'); // ← Analytics (Google on signup page = login)
 
             if (data?.user && !data.user.isOnboarded) {
                 router.push('/onboarding');
@@ -93,6 +96,7 @@ export default function SignupPage() {
             setGuestError('Please enter your name');
             return;
         }
+        trackSignUp('guest'); // ← Analytics
         joinAsGuest(guestName.trim(), guestGender);
         router.push('/video/chat');
     };

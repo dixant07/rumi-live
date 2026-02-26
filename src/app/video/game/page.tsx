@@ -32,6 +32,7 @@ import { AlertModal } from '@/components/ui/alert-modal';
 import { FilterSelector } from '@/components/video/FilterSelector';
 import { useFilter } from '@/lib/contexts/FilterContext';
 import { toast } from "sonner";
+import { trackGameStarted, trackGameEnded } from '@/lib/utils/analytics';
 
 export default function VideoGamePage() {
     return (
@@ -67,6 +68,8 @@ function VideoGameContent() {
     const [outgoingInvite, setOutgoingInvite] = useState<{ gameId: string } | null>(null);
     const [showReportModal, setShowReportModal] = useState(false);
     const [inputText, setInputText] = useState("");
+    const [currentGameId, setCurrentGameId] = useState<string | null>(null); // Analytics
+    const [gameStartTime, setGameStartTime] = useState<number>(0);            // Analytics
     const [alertState, setAlertState] = useState<{
         isOpen: boolean;
         title: string;
@@ -307,6 +310,15 @@ function VideoGameContent() {
             setGameUrl(`${GAME_BASE_URL}/${gameId}?${params.toString()}`);
             setShowGame(true);
             setOutgoingInvite(null);
+            // Analytics: game started
+            setCurrentGameId(gameId);
+            setGameStartTime(Date.now());
+            trackGameStarted({
+                game_id: gameId,
+                game_name: gameId,
+                is_bot: isConnectedToBot,
+                match_id: networkManager.roomId || ''
+            });
         };
 
         const handleGameReject = (data: unknown) => {
@@ -500,10 +512,21 @@ function VideoGameContent() {
     };
 
     const handleCloseGame = () => {
+        // Analytics: game ended
+        if (currentGameId && gameStartTime) {
+            trackGameEnded({
+                game_id: currentGameId,
+                game_name: currentGameId,
+                duration_seconds: Math.round((Date.now() - gameStartTime) / 1000),
+                match_id: networkManager?.roomId || ''
+            });
+        }
         if (networkManager?.videoConnection) {
             networkManager.videoConnection.sendGameLeave();
         }
         setShowGame(false);
+        setCurrentGameId(null);
+        setGameStartTime(0);
     };
 
     return (
