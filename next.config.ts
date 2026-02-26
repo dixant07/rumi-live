@@ -16,6 +16,13 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   output: 'standalone', // Required for Docker deployment
 
+  compiler: {
+    // Strip all console.log in production. Keep console.error & console.warn.
+    removeConsole: process.env.NODE_ENV === 'production'
+      ? { exclude: ['error', 'warn'] }
+      : false,
+  },
+
   // Ensure static files in public folder are properly served
   // This includes games in /public/games/*
   async headers() {
