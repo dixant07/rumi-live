@@ -120,7 +120,7 @@ export default function LandingPage() {
     setIsJoiningAsGuest(true);
     try {
       joinAsGuest(guestName, guestGender);
-      router.push('/video/chat');
+      router.push('/video/game');
     } catch (error) {
       console.error('Failed to join as guest:', error);
       setGuestError('Failed to join. Please try again.');
@@ -134,7 +134,7 @@ export default function LandingPage() {
     }
     // If already a guest, redirect to video chat
     if (isGuest) {
-      router.push('/video/chat');
+      router.push('/video/game');
     }
   }, [user, loading, router, isGuest]);
 

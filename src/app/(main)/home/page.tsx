@@ -25,7 +25,7 @@ export default function HomePage() {
     const router = useRouter();
     const localVideoRef = useRef<HTMLVideoElement>(null);
 
-    const [mode, setMode] = useState<'game' | 'video'>('video');
+    const [mode, setMode] = useState<'game' | 'video'>('game');
     const [selectedGame, setSelectedGame] = useState(data.games[0].id);
     const [selectedRegion, setSelectedRegion] = useState(data.regions[0].id);
     const [selectedGender, setSelectedGender] = useState(data.genders[0].id);

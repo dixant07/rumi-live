@@ -32,13 +32,14 @@ const GameConfig = {
 
     UI: {
         FONT_FAMILY: 'Outfit, Arial, sans-serif',
-        PRIMARY_COLOR: '#9b59b6',
-        SECONDARY_COLOR: '#34495e',
-        ACCENT_COLOR: '#f1c40f',
-        BG_COLOR: '#2c3e50',
-        GRID_COLOR: '#ecf0f1',
-        SELECTED_COLOR: '#e74c3c', // Red when selected by self
-        MARKED_COLOR: '#2ecc71'    // Green when confirmed marked
+        PRIMARY_COLOR: '#345e3c',    // Dark Green
+        SECONDARY_COLOR: '#4b7b56',  // Medium Green
+        ACCENT_COLOR: '#2f4f34',     // Darker Green for background elements
+        BG_COLOR: '#e3efe2',         // Light green background
+        GRID_COLOR: '#3b6343',       // Grid cells
+        SELECTED_COLOR: '#1e3522',   // Stroke / Deep Dark green
+        MARKED_COLOR: '#2ecc71',     // Bright green when confirmed marked
+        TEXT_COLOR: '#ffffff'
     },
 
     DEBUG: {

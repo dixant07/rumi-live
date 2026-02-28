@@ -44,10 +44,10 @@ if (serverUrl) {
 const config = {
     type: Phaser.AUTO,
     scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: GameConfig.DISPLAY.TARGET_WIDTH,
-        height: GameConfig.DISPLAY.TARGET_HEIGHT,
+        width: '100%',
+        height: '100%',
         parent: GameConfig.DISPLAY.PARENT
     },
     backgroundColor: GameConfig.DISPLAY.BACKGROUND_COLOR,

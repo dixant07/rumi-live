@@ -11,7 +11,7 @@ const GameConfig = {
         TARGET_WIDTH: 600,
         TARGET_HEIGHT: 800,
         PARENT: 'app',
-        BACKGROUND_COLOR: '#1a1a1a',
+        BACKGROUND_COLOR: '#121212', // Deep sleek dark background
     },
 
     GAME: {
@@ -29,11 +29,12 @@ const GameConfig = {
     },
 
     UI: {
-        FONT_FAMILY: 'Arial',
+        FONT_FAMILY: 'Outfit, Arial, sans-serif',
         TEXT_COLOR: '#ffffff',
-        X_COLOR: '#ff4d4d',
-        O_COLOR: '#4d79ff',
-        GRID_COLOR: '#444444',
+        X_COLOR: '#ecf0f1',       // Clean white for X
+        O_COLOR: '#bdc3c7',       // Soft silver for O
+        GRID_COLOR: '#333333',    // Subtle grid lines
+        ACCENT_COLOR: '#2c3e50',  // Dark blue-grey accents
     },
 
     DEBUG: {

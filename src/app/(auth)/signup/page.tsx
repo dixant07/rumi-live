@@ -98,7 +98,7 @@ export default function SignupPage() {
         }
         trackSignUp('guest'); // ← Analytics
         joinAsGuest(guestName.trim(), guestGender);
-        router.push('/video/chat');
+        router.push('/video/game');
     };
 
     if (emailSent) {

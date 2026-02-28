@@ -105,7 +105,7 @@ export default function LoginPage() {
         }
         trackLogin('guest'); // ← Analytics
         joinAsGuest(guestName.trim(), guestGender);
-        router.push('/video/chat');
+        router.push('/video/game');
     };
 
     return (
